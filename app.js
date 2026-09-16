@@ -153,17 +153,16 @@ async function processOne(file, index) {
 
   drawWatermark(ctx, origW, origH, wmText);
 
-  // PNG 不支持有损压缩质量参数,统一处理
+  // 用 dataURL 而非 blobURL,兼容移动端下载(iOS 对 blob 下载支持差)
   const mime = formatSel.value;
-  const blob = await new Promise((resolve) =>
-    canvas.toBlob(resolve, mime, quality)
-  );
+  const dataUrl = canvas.toDataURL(mime, quality);
+  const base64 = dataUrl.split(',')[1] || '';
+  const outSize = Math.floor((base64.length * 3) / 4); // base64 解码后的近似字节数
 
-  const url = URL.createObjectURL(blob);
-  const savedBytes = origSize - blob.size;
+  const savedBytes = origSize - outSize;
   const savedPct = Math.round((savedBytes / origSize) * 100);
 
-  return { img, url, blob, file, origSize, origW, origH, savedBytes, savedPct, mime };
+  return { img, url: dataUrl, outSize, file, origSize, origW, origH, savedBytes, savedPct, mime };
 }
 
 function fmtSize(bytes) {
@@ -174,6 +173,30 @@ function fmtSize(bytes) {
 
 function extFromMime(mime) {
   return { 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/png': 'png' }[mime] || 'jpg';
+}
+
+// 移动端下载:dataURL 兼容性更好;iOS 不支持 download 属性,改为长按保存
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
+function downloadImage(dataUrl, filename) {
+  if (isIOS) {
+    const w = window.open();
+    if (w) {
+      w.document.title = filename;
+      w.document.body.innerHTML =
+        '<img src="' + dataUrl + '" style="width:100%;display:block">' +
+        '<p style="text-align:center;font-family:sans-serif;padding:12px">长按图片 → 保存到相册</p>';
+    } else {
+      alert('长按上方图片,即可保存到相册');
+    }
+    return;
+  }
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => a.remove(), 200);
 }
 
 // ============================================================
@@ -191,7 +214,7 @@ function renderResult(item, index) {
     <div class="result-info">
       <div class="result-name">${outName}</div>
       <div class="result-size">
-        ${fmtSize(item.origSize)} → ${fmtSize(item.blob.size)}
+        ${fmtSize(item.origSize)} → ${fmtSize(item.outSize)}
         ${item.savedPct >= 0
           ? `<span class="saved">(省 ${item.savedPct}%)</span>`
           : `<span style="color:var(--danger)">(+${-item.savedPct}%)</span>`}
@@ -200,11 +223,8 @@ function renderResult(item, index) {
     <button class="btn-download" data-url="${item.url}" data-name="${outName}">下载</button>
   `;
 
-  div.querySelector('.btn-download').addEventListener('click', (e) => {
-    const a = document.createElement('a');
-    a.href = e.target.dataset.url;
-    a.download = e.target.dataset.name;
-    a.click();
+  div.querySelector('.btn-download').addEventListener('click', () => {
+    downloadImage(item.url, outName);
   });
 
   resultList.appendChild(div);
