@@ -40,10 +40,6 @@ const activateMsg = $('#activateMsg');
 // ============================================================
 const ACTIVATION_KEY = 'tqs_premium';
 const ADMIN_KEY = 'tqs_admin';
-// 演示激活码(免费发放给你测试用)
-const DEMO_CODES = ['FREE2026', 'VIP-测试码'];
-// ===== 开发者后门:主控码(仅自己知道,上线前务必改掉) =====
-const MASTER_CODE = 'TQS-ADMIN-9527';
 
 function isPremium() {
   return localStorage.getItem(ACTIVATION_KEY) === '1' || localStorage.getItem(ADMIN_KEY) === '1';
@@ -61,35 +57,29 @@ function refreshPremiumUI() {
     upgradeBtn.style.background = '';
   }
 }
-function activateCode() {
+
+// 激活:调用后端 /api/activate 校验(激活码不再写死在网页里,别人看不到也破解不了)
+async function activateCode() {
   const code = codeInput.value.trim();
   if (!code) { showMsg('请输入激活码', false); return; }
-  // 主控码:永久解锁 + 管理员标记
-  if (code === MASTER_CODE) {
-    localStorage.setItem(ACTIVATION_KEY, '1');
-    localStorage.setItem(ADMIN_KEY, '1');
-    showMsg('👑 主控激活成功(管理员模式)', true);
-    refreshPremiumUI();
-    return;
-  }
-  if (DEMO_CODES.includes(code)) {
-    localStorage.setItem(ACTIVATION_KEY, '1');
-    showMsg('✅ 激活成功,会员已生效!', true);
-    refreshPremiumUI();
-  } else {
-    showMsg('❌ 激活码无效,请核对后重试', false);
+  activateBtn.disabled = true;
+  try {
+    const res = await fetch('/api/activate?code=' + encodeURIComponent(code));
+    const data = await res.json();
+    if (data.ok) {
+      localStorage.setItem(ACTIVATION_KEY, '1');
+      if (data.admin) localStorage.setItem(ADMIN_KEY, '1');
+      showMsg(data.admin ? '👑 主控激活成功(管理员模式)' : '✅ 激活成功,会员已生效!', true);
+      refreshPremiumUI();
+    } else {
+      showMsg('❌ ' + (data.msg || '激活码无效'), false);
+    }
+  } catch (e) {
+    showMsg('❌ 网络错误,请稍后重试', false);
+  } finally {
+    activateBtn.disabled = false;
   }
 }
-
-// ===== 控制台后门:按 F12 打开控制台,输入 tqs.unlock() 直接解锁 =====
-window.tqs = {
-  unlock() {
-    localStorage.setItem(ACTIVATION_KEY, '1');
-    localStorage.setItem(ADMIN_KEY, '1');
-    refreshPremiumUI();
-    console.log('%c 图轻松 · 已解锁管理员模式', 'color:#3ddc84;font-size:14px;font-weight:bold');
-  },
-};
 function showMsg(text, ok) {
   activateMsg.textContent = text;
   activateMsg.className = 'activate-msg ' + (ok ? 'ok' : 'err');
