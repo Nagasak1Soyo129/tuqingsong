@@ -255,8 +255,28 @@ footer {
 }
 
 @media (max-width: 600px) {
-  .topbar { padding: 12px 16px; gap: 12px; }
+  /* 顶栏:自动换行,品牌+升级按钮一行,导航独占一行 */
+  .topbar { padding: 10px 14px; gap: 10px; flex-wrap: wrap; }
+  .brand { font-size: 16px; }
+  nav { order: 3; width: 100%; gap: 0; justify-content: space-around; }
+  .nav-item { font-size: 13px; padding: 6px 0; }
+  .btn-upgrade { padding: 6px 12px; font-size: 12px; }
+
+  main { padding: 24px 14px 60px; }
+  .hero h1 { font-size: 22px; }
+  .sub { font-size: 13px; }
+
+  .drop-zone { padding: 36px 16px; }
+  .drop-icon { font-size: 34px; }
+
+  .controls { padding: 16px; flex-direction: column; align-items: stretch; }
+  input[type="range"], input[type="text"], select { width: 100%; }
+
+  .result-item { flex-wrap: wrap; }
+  .result-item img { width: 48px; height: 48px; }
+  .btn-download { width: 100%; }
+
   .plans { flex-direction: column; }
-  .controls { flex-direction: column; align-items: stretch; }
-  input[type="range"], input[type="text"] { width: 100%; }
+  .modal-box { padding: 24px 18px; }
+  .modal-box h2 { font-size: 20px; }
 }
