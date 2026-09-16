@@ -180,15 +180,8 @@ const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
 function downloadImage(dataUrl, filename) {
   if (isIOS) {
-    const w = window.open();
-    if (w) {
-      w.document.title = filename;
-      w.document.body.innerHTML =
-        '<img src="' + dataUrl + '" style="width:100%;display:block">' +
-        '<p style="text-align:center;font-family:sans-serif;padding:12px">长按图片 → 保存到相册</p>';
-    } else {
-      alert('长按上方图片,即可保存到相册');
-    }
+    // iOS Safari 不认 download 属性,直接提示长按结果图保存
+    alert('请长按上方的图片,选择「存储图像」即可保存到相册');
     return;
   }
   const a = document.createElement('a');
@@ -220,7 +213,7 @@ function renderResult(item, index) {
           : `<span style="color:var(--danger)">(+${-item.savedPct}%)</span>`}
       </div>
     </div>
-    <button class="btn-download" data-url="${item.url}" data-name="${outName}">下载</button>
+    <button class="btn-download">下载</button>
   `;
 
   div.querySelector('.btn-download').addEventListener('click', () => {
