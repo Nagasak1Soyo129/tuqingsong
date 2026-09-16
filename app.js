@@ -130,6 +130,15 @@ function drawWatermark(ctx, w, h, text) {
   ctx.shadowBlur = 0; // 重置,避免影响后续
 }
 
+// 超长边上限:超大图在手机上 canvas 会内存溢出导致出图失败,按比例缩小
+const MAX_DIM = 4096;
+
+function canvasToBlob(canvas, mime, quality) {
+  return new Promise((resolve) => {
+    canvas.toBlob((blob) => resolve(blob || null), mime, quality);
+  });
+}
+
 async function processOne(file, index) {
   const img = await loadFile(file);
 
@@ -145,24 +154,33 @@ async function processOne(file, index) {
   let wmText = wmTextInput.value.trim();
   if (!state.premium && !wmText) wmText = '图轻松';
 
+  // 超大图按比例缩小,避免移动端 canvas 内存溢出
+  let drawW = origW, drawH = origH;
+  if (Math.max(origW, origH) > MAX_DIM) {
+    const scale = MAX_DIM / Math.max(origW, origH);
+    drawW = Math.round(origW * scale);
+    drawH = Math.round(origH * scale);
+  }
+
   const canvas = document.createElement('canvas');
-  canvas.width = origW;
-  canvas.height = origH;
+  canvas.width = drawW;
+  canvas.height = drawH;
   const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0);
+  ctx.drawImage(img, 0, 0, drawW, drawH);
 
-  drawWatermark(ctx, origW, origH, wmText);
+  drawWatermark(ctx, drawW, drawH, wmText);
 
-  // 用 dataURL 而非 blobURL,兼容移动端下载(iOS 对 blob 下载支持差)
+  // 用 blob 而非 dataURL:预览图(blob URL)手机更稳,下载/分享也能直接用
   const mime = formatSel.value;
-  const dataUrl = canvas.toDataURL(mime, quality);
-  const base64 = dataUrl.split(',')[1] || '';
-  const outSize = Math.floor((base64.length * 3) / 4); // base64 解码后的近似字节数
+  const blob = await canvasToBlob(canvas, mime, quality);
+  if (!blob) throw new Error('生成图片失败,可能图片过大');
+  const url = URL.createObjectURL(blob);
+  const outSize = blob.size;
 
   const savedBytes = origSize - outSize;
   const savedPct = Math.round((savedBytes / origSize) * 100);
 
-  return { img, url: dataUrl, outSize, file, origSize, origW, origH, savedBytes, savedPct, mime };
+  return { img, blob, url, outSize, file, origSize, origW, origH, savedBytes, savedPct, mime };
 }
 
 function fmtSize(bytes) {
@@ -175,21 +193,31 @@ function extFromMime(mime) {
   return { 'image/jpeg': 'jpg', 'image/webp': 'webp', 'image/png': 'png' }[mime] || 'jpg';
 }
 
-// 移动端下载:dataURL 兼容性更好;iOS 不支持 download 属性,改为长按保存
+// 移动端下载:iOS 用系统分享(可「存储图像」),安卓/桌面直接下载
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
 
-function downloadImage(dataUrl, filename) {
+async function downloadImage(blob, filename) {
   if (isIOS) {
-    // iOS Safari 不认 download 属性,直接提示长按结果图保存
+    const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: filename });
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return; // 用户取消分享,不算错误
+      }
+    }
     alert('请长按上方的图片,选择「存储图像」即可保存到相册');
     return;
   }
+
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = dataUrl;
+  a.href = url;
   a.download = filename;
   document.body.appendChild(a);
   a.click();
-  setTimeout(() => a.remove(), 200);
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
 }
 
 // ============================================================
@@ -217,14 +245,21 @@ function renderResult(item, index) {
   `;
 
   div.querySelector('.btn-download').addEventListener('click', () => {
-    downloadImage(item.url, outName);
+    downloadImage(item.blob, outName);
   });
 
   resultList.appendChild(div);
 }
 
-async function processAll() {
+function clearResults() {
+  resultList.querySelectorAll('img').forEach((img) => {
+    if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+  });
   resultList.innerHTML = '';
+}
+
+async function processAll() {
+  clearResults();
   results.hidden = false;
   countEl.textContent = `共 ${state.files.length} 张`;
 
@@ -255,8 +290,7 @@ function handleFiles(fileList) {
   state.files = state.files.concat(files);
   controls.hidden = false;
   results.hidden = true;
-  // 清空结果旧图
-  resultList.innerHTML = '';
+  clearResults();
 }
 
 dropZone.addEventListener('click', () => fileInput.click());
@@ -280,7 +314,7 @@ clearBtn.addEventListener('click', () => {
   state.files = [];
   controls.hidden = true;
   results.hidden = true;
-  resultList.innerHTML = '';
+  clearResults();
 });
 
 // 导航切换(只是切换不同视图的高亮,核心逻辑共用)
