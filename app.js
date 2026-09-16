@@ -297,8 +297,12 @@ codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') activateCo
 document.querySelectorAll('.btn-plan').forEach((btn) => {
   btn.addEventListener('click', () => {
     const plan = btn.dataset.plan;
-    const label = plan === 'lifetime' ? '终身买断 ¥49' : '月度 ¥9.9';
-    alert(`演示版:已选择「${label}」。\n上线后这里接入微信/支付宝收款,支付成功自动发放激活码。`);
+    const amount = plan === 'lifetime' ? '¥49 终身买断' : '¥9.9 月度';
+    const qrAmount = document.getElementById('qrAmount');
+    const sec = document.getElementById('payQrSection');
+    if (qrAmount) qrAmount.textContent = amount;
+    if (sec) sec.hidden = false;
+    if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
   });
 });
 

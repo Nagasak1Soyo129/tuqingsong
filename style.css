@@ -246,6 +246,15 @@ input[type="text"] { width: 180px; }
 .activate-msg.ok { color: var(--ok); }
 .activate-msg.err { color: var(--danger); }
 
+/* 收款二维码 */
+.pay-qr-section { text-align: center; padding: 6px 0 18px; border-bottom: 1px solid var(--border); margin-bottom: 18px; }
+.qr-title { font-size: 15px; font-weight: 600; margin-bottom: 12px; }
+.qr-img { width: 200px; max-width: 70%; border-radius: 10px; border: 1px solid var(--border); display: block; margin: 0 auto 12px; background: #fff; }
+.qr-amount { font-size: 20px; font-weight: 700; color: var(--gold); margin-bottom: 6px; }
+.qr-tip { font-size: 13px; color: var(--muted); }
+.qr-contact { font-size: 13px; margin-top: 8px; }
+.qr-contact b { color: var(--accent); }
+
 footer {
   text-align: center;
   color: var(--muted);
