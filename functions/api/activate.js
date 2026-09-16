@@ -19,13 +19,10 @@ export async function onRequestGet(context) {
     return json({ ok: true, admin: true });
   }
 
-  // 2) 有效码列表:环境变量 VALID_CODES(JSON 数组)
-  let validCodes;
-  try {
-    validCodes = JSON.parse(env.VALID_CODES || '[]');
-  } catch (e) {
-    return json({ ok: false, msg: '服务器配置错误' }, 500);
-  }
+  // 2) 有效码列表:环境变量 VALID_CODES
+  //    支持换行/逗号/分号/空格分隔,粘贴格式错了也能容错
+  const raw = env.VALID_CODES || '';
+  const validCodes = raw.split(/[\s,;，；]+/).map((s) => s.trim().toUpperCase()).filter(Boolean);
 
   if (validCodes.includes(code)) {
     return json({ ok: true });
