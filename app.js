@@ -746,29 +746,75 @@ closeAdmin.addEventListener('click', () => { adminModal.hidden = true; });
 adminModal.addEventListener('click', (e) => { if (e.target === adminModal) adminModal.hidden = true; });
 genBtn.addEventListener('click', generateCodes);
 
-// 发卡平台购买链接 —— 拿到发卡平台的商品链接后,把下面两个网址替换掉即可
-// 留空则退回显示微信收款码(手动发码)
-const PAY_LINKS = {
-  month: '',
-  lifetime: '',
-};
+// 在线支付(虎皮椒):点套餐 → 创建订单 → 跳转扫码 → 回调自动开通会员
+// 支付未配置(XH_APPID/XH_SECRET 为空)时,退回展示微信收款码(手动发码)
+function showQr(plan) {
+  const amount = plan === 'lifetime' ? '¥49 终身买断' : '¥9.9 月度';
+  const qrAmount = document.getElementById('qrAmount');
+  const sec = document.getElementById('payQrSection');
+  if (qrAmount) qrAmount.textContent = amount;
+  if (sec) sec.hidden = false;
+  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 
-// 套餐按钮:配了发卡平台链接就跳过去,否则展示收款码
-document.querySelectorAll('.btn-plan').forEach((btn) => {
-  btn.addEventListener('click', () => {
-    const plan = btn.dataset.plan;
-    const link = PAY_LINKS[plan];
-    if (link) {
-      window.open(link, '_blank');
-      return;
+let pollTimer = null;
+function pollOrder(tradeOrderId) {
+  clearInterval(pollTimer);
+  let tries = 0;
+  pollTimer = setInterval(async () => {
+    tries++;
+    if (tries > 60) { clearInterval(pollTimer); return; } // 最多轮询 2 分钟
+    try {
+      const res = await fetch('/api/pay/status?trade_order_id=' + encodeURIComponent(tradeOrderId), {
+        headers: { Authorization: 'Bearer ' + state.token },
+      });
+      const data = await res.json();
+      if (data.ok && data.status === 'paid') {
+        clearInterval(pollTimer);
+        state.user = { ...state.user, premium: true };
+        refreshAuthUI();
+        showMsg('✅ 支付成功,会员已自动开通!', true);
+      }
+    } catch (e) {}
+  }, 2000);
+}
+
+async function startPayment(plan) {
+  if (!state.user) {
+    showMsg('请先登录账号再购买', false);
+    setAuthMode('login');
+    loginModal.hidden = false;
+    return;
+  }
+  if (state.user.premium) {
+    showMsg('你已是会员,无需重复购买', true);
+    return;
+  }
+  showMsg('正在创建订单…', true);
+  try {
+    const res = await fetch('/api/pay/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + state.token },
+      body: JSON.stringify({ plan }),
+    });
+    const data = await res.json();
+    if (data.ok && data.url) {
+      window.open(data.url, '_blank');
+      showMsg('已打开支付页,付完款会自动开通会员(此页别关)…', true);
+      pollOrder(data.tradeOrderId);
+    } else {
+      showMsg('');
+      showQr(plan);
     }
-    const amount = plan === 'lifetime' ? '¥49 终身买断' : '¥9.9 月度';
-    const qrAmount = document.getElementById('qrAmount');
-    const sec = document.getElementById('payQrSection');
-    if (qrAmount) qrAmount.textContent = amount;
-    if (sec) sec.hidden = false;
-    if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  });
+  } catch (e) {
+    showMsg('');
+    showQr(plan);
+  }
+}
+
+// 套餐按钮:走在线支付;支付未配置时退回收款码
+document.querySelectorAll('.btn-plan').forEach((btn) => {
+  btn.addEventListener('click', () => startPayment(btn.dataset.plan));
 });
 
 // 初始化:先看本地 token 是否有效,再刷新 UI
