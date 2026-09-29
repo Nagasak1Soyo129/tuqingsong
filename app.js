@@ -66,6 +66,16 @@ const cropCanvas = $('#cropCanvas');
 const cropApply = $('#cropApply');
 const cropCancel = $('#cropCancel');
 
+const adminBtn = $('#adminBtn');
+const adminModal = $('#adminModal');
+const closeAdmin = $('#closeAdmin');
+const genCount = $('#genCount');
+const genNote = $('#genNote');
+const genBtn = $('#genBtn');
+const genResult = $('#genResult');
+const codeList = $('#codeList');
+const adminMsgEl = $('#adminMsg');
+
 // ============================================================
 // 账号系统(注册/登录,后端校验,会员状态存服务器)
 // ============================================================
@@ -92,6 +102,7 @@ function refreshAuthUI() {
     upgradeBtn.textContent = '⭐ 升级会员';
     upgradeBtn.style.background = '';
   }
+  adminBtn.hidden = !isAdmin();
 }
 
 function setAuthMode(mode) {
@@ -183,6 +194,75 @@ async function activateCode() {
 function showMsg(text, ok) {
   activateMsg.textContent = text;
   activateMsg.className = 'activate-msg ' + (ok ? 'ok' : 'err');
+}
+
+// ============================================================
+// 发码后台(仅管理员)
+// ============================================================
+function adminMsg(text, ok) {
+  adminMsgEl.textContent = text || '';
+  adminMsgEl.className = 'activate-msg' + (text ? (ok ? ' ok' : ' err') : '');
+}
+
+async function loadCodes() {
+  try {
+    const res = await fetch('/api/admin/codes', { headers: { Authorization: 'Bearer ' + state.token } });
+    const data = await res.json();
+    if (!data.ok) { adminMsg('❌ ' + (data.msg || '加载失败'), false); return; }
+    renderCodeList(data.codes || []);
+  } catch (e) {
+    adminMsg('❌ 网络错误', false);
+  }
+}
+
+function renderCodeList(codes) {
+  if (!codes.length) {
+    codeList.innerHTML = '<p class="muted">还没有生成过激活码</p>';
+    return;
+  }
+  codeList.innerHTML = codes.map((c) => `
+    <div class="code-row ${c.usedBy ? 'used' : ''}">
+      <span class="code-text">${c.code}</span>
+      <span class="code-meta">${c.usedBy ? '已用 · ' + c.usedBy : '未使用'}${c.note ? ' · ' + c.note : ''}</span>
+    </div>
+  `).join('');
+}
+
+async function generateCodes() {
+  const count = parseInt(genCount.value, 10) || 1;
+  const note = genNote.value.trim();
+  genBtn.disabled = true;
+  adminMsg('');
+  try {
+    const res = await fetch('/api/admin/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + state.token },
+      body: JSON.stringify({ count, note }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      genResult.innerHTML = (data.codes || []).map((c) =>
+        `<div class="gen-code"><code>${c}</code><button class="btn-copy" data-code="${c}">复制</button></div>`
+      ).join('');
+      genResult.querySelectorAll('.btn-copy').forEach((b) => {
+        b.addEventListener('click', () => {
+          navigator.clipboard.writeText(b.dataset.code).then(() => {
+            b.textContent = '已复制';
+            setTimeout(() => { b.textContent = '复制'; }, 1200);
+          });
+        });
+      });
+      adminMsg('✅ 已生成 ' + data.codes.length + ' 个激活码', true);
+      genNote.value = '';
+      loadCodes();
+    } else {
+      adminMsg('❌ ' + (data.msg || '生成失败'), false);
+    }
+  } catch (e) {
+    adminMsg('❌ 网络错误', false);
+  } finally {
+    genBtn.disabled = false;
+  }
 }
 
 // ============================================================
@@ -659,6 +739,12 @@ tabLogin.addEventListener('click', () => setAuthMode('login'));
 tabRegister.addEventListener('click', () => setAuthMode('register'));
 authSubmit.addEventListener('click', authSubmitHandler);
 authPass.addEventListener('keydown', (e) => { if (e.key === 'Enter') authSubmitHandler(); });
+
+// 发码后台(仅管理员)
+adminBtn.addEventListener('click', () => { adminModal.hidden = false; loadCodes(); });
+closeAdmin.addEventListener('click', () => { adminModal.hidden = true; });
+adminModal.addEventListener('click', (e) => { if (e.target === adminModal) adminModal.hidden = true; });
+genBtn.addEventListener('click', generateCodes);
 
 // 发卡平台购买链接 —— 拿到发卡平台的商品链接后,把下面两个网址替换掉即可
 // 留空则退回显示微信收款码(手动发码)

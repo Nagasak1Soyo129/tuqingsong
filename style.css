@@ -315,6 +315,22 @@ input[type="text"] { width: 180px; }
 .qr-contact { font-size: 13px; margin-top: 8px; }
 .qr-contact b { color: var(--accent); }
 
+/* 发码后台 */
+.admin-gen { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.admin-gen input[type="number"] { width: 70px; }
+.admin-gen input[type="text"] { flex: 1; min-width: 140px; }
+.gen-result { margin-bottom: 16px; }
+.gen-code { display: flex; align-items: center; gap: 10px; background: var(--panel-2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 6px; }
+.gen-code code { font-size: 15px; letter-spacing: 1px; color: var(--gold); flex: 1; word-break: break-all; }
+.btn-copy { background: var(--panel-2); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 4px 10px; cursor: pointer; font-size: 12px; white-space: nowrap; }
+.btn-copy:hover { color: var(--text); border-color: var(--muted); }
+.code-list { border-top: 1px solid var(--border); padding-top: 12px; max-height: 260px; overflow-y: auto; }
+.code-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 7px 2px; border-bottom: 1px solid var(--border); font-size: 13px; }
+.code-text { font-family: ui-monospace, monospace; letter-spacing: 0.5px; }
+.code-row.used .code-text { color: var(--muted); text-decoration: line-through; }
+.code-meta { color: var(--muted); font-size: 12px; text-align: right; }
+.muted { color: var(--muted); font-size: 13px; }
+
 footer {
   text-align: center;
   color: var(--muted);

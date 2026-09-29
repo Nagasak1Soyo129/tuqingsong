@@ -22,6 +22,15 @@ export function randomHex(bytes) {
   return [...arr].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+// 生成一次性激活码:如 TQS-7K3M-9Q2W-X8FA(去掉易混淆的 0/O/1/I)
+export function randomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const arr = new Uint8Array(12);
+  crypto.getRandomValues(arr);
+  const s = [...arr].map((b) => chars[b % chars.length]).join('');
+  return `TQS-${s.slice(0, 4)}-${s.slice(4, 8)}-${s.slice(8, 12)}`;
+}
+
 // PBKDF2-SHA256 派生 256 位,hex 输出(迭代次数低以适配免费档 CPU 限制)
 export async function hashPassword(password, salt) {
   const enc = new TextEncoder();
