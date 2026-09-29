@@ -14,6 +14,8 @@
       <span class="nav-item active" data-view="compress">压缩</span>
       <span class="nav-item" data-view="convert">转格式</span>
       <span class="nav-item" data-view="watermark">加水印</span>
+      <span class="nav-item" data-view="resize">调整尺寸</span>
+      <span class="nav-item" data-view="rotate">旋转</span>
     </nav>
     <button id="accountBtn" class="btn-account">登录</button>
     <button id="upgradeBtn" class="btn-upgrade">⭐ 升级会员</button>
@@ -65,6 +67,36 @@
             <option value="center">居中</option>
           </select>
         </label>
+      </div>
+
+      <div class="control-group" id="group-resize">
+        <label>调整尺寸(像素,留空不调)</label>
+        <div class="resize-row">
+          <input type="number" id="resizeW" placeholder="宽" min="1" />
+          <span class="x">×</span>
+          <input type="number" id="resizeH" placeholder="高" min="1" />
+          <label class="lock"><input type="checkbox" id="resizeLock" checked /> 等比</label>
+        </div>
+      </div>
+
+      <div class="control-group" id="group-rotate">
+        <label>旋转 / 翻转 <span id="rotateStatus" class="val"></span></label>
+        <div class="rotate-row">
+          <button class="btn-rotate" data-rotate="-90">↺ 左转90°</button>
+          <button class="btn-rotate" data-rotate="90">↻ 右转90°</button>
+          <button class="btn-rotate" data-rotate="180">180°</button>
+          <button class="btn-rotate" data-flip="h">⇋ 水平翻转</button>
+          <button class="btn-rotate" data-flip="v">⇵ 垂直翻转</button>
+          <button class="btn-rotate" id="rotateReset">重置</button>
+        </div>
+      </div>
+
+      <div class="control-group" id="group-crop">
+        <label>裁剪 <span id="cropStatus" class="val"></span></label>
+        <div class="rotate-row">
+          <button class="btn-ghost" id="cropBtn">选择裁剪区域</button>
+          <button class="btn-ghost" id="cropClear">清除</button>
+        </div>
       </div>
 
       <div class="control-group" id="group-batch">
@@ -141,6 +173,20 @@
           <input type="password" id="authPass" placeholder="密码(至少 6 位)" autocomplete="current-password" />
           <button id="authSubmit" class="btn-primary">登录</button>
           <p id="authMsg" class="activate-msg"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 裁剪弹窗 -->
+    <div id="cropModal" class="modal" hidden>
+      <div class="modal-box crop-box">
+        <button class="modal-close" id="closeCrop">×</button>
+        <h2>裁剪图片</h2>
+        <p class="modal-sub">在图片上拖拽框选要保留的区域</p>
+        <canvas id="cropCanvas"></canvas>
+        <div class="crop-actions">
+          <button class="btn-ghost" id="cropCancel">取消</button>
+          <button class="btn-primary" id="cropApply">应用裁剪</button>
         </div>
       </div>
     </div>

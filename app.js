@@ -1,5 +1,5 @@
 // ============================================================
-// 图轻松 —— 图片压缩 / 转格式 / 加水印
+// 图轻松 —— 图片工具箱:压缩 / 转格式 / 加水印 / 裁剪 / 调整尺寸 / 旋转
 // 纯前端处理,图片不出浏览器,无服务器成本
 // 变现:免费版 = 单张 + 强制水印 + 质量上限 80%
 //       会员  = 批量 + 去水印 + 高清(质量 100%)
@@ -11,6 +11,10 @@ const state = {
   token: localStorage.getItem('tqs_token') || '',              // 登录 token
   user: null,                                                  // { username, premium, admin }
   premium: false,
+  rotate: 0,                                                   // 0/90/180/270
+  flipH: false,
+  flipV: false,
+  crop: null,                                                  // { nx, ny, nw, nh } 归一化(0~1)
 };
 
 // ---- DOM 引用 ----
@@ -30,6 +34,14 @@ const wmPosSel = $('#wmPos');
 const processBtn = $('#processBtn');
 const clearBtn = $('#clearBtn');
 
+const resizeWInput = $('#resizeW');
+const resizeHInput = $('#resizeH');
+const resizeLock = $('#resizeLock');
+const rotateStatus = $('#rotateStatus');
+const cropStatus = $('#cropStatus');
+const cropBtn = $('#cropBtn');
+const cropClear = $('#cropClear');
+
 const accountBtn = $('#accountBtn');
 const upgradeBtn = $('#upgradeBtn');
 const upgradeModal = $('#upgradeModal');
@@ -47,6 +59,12 @@ const authUser = $('#authUser');
 const authPass = $('#authPass');
 const authSubmit = $('#authSubmit');
 const authMsgEl = $('#authMsg');
+
+const cropModal = $('#cropModal');
+const closeCrop = $('#closeCrop');
+const cropCanvas = $('#cropCanvas');
+const cropApply = $('#cropApply');
+const cropCancel = $('#cropCancel');
 
 // ============================================================
 // 账号系统(注册/登录,后端校验,会员状态存服务器)
@@ -170,6 +188,8 @@ function showMsg(text, ok) {
 // ============================================================
 // 图片处理核心
 // ============================================================
+const MAX_DIM = 4096;
+
 function loadFile(file) {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -177,6 +197,67 @@ function loadFile(file) {
     img.onerror = reject;
     img.src = URL.createObjectURL(file);
   });
+}
+
+function imageToCanvas(img, w, h) {
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  c.getContext('2d').drawImage(img, 0, 0, w, h);
+  return c;
+}
+
+// 裁剪:rect 为归一化坐标(0~1),基于当前 canvas 尺寸换算
+function applyCrop(src, rect) {
+  const x = Math.round(rect.nx * src.width);
+  const y = Math.round(rect.ny * src.height);
+  const w = Math.round(rect.nw * src.width);
+  const h = Math.round(rect.nh * src.height);
+  const c = document.createElement('canvas');
+  c.width = w;
+  c.height = h;
+  c.getContext('2d').drawImage(src, x, y, w, h, 0, 0, w, h);
+  return c;
+}
+
+// 旋转 + 翻转
+function transformCanvas(src) {
+  const w = src.width, h = src.height;
+  const swap = state.rotate % 180 !== 0;
+  const outW = swap ? h : w;
+  const outH = swap ? w : h;
+  const c = document.createElement('canvas');
+  c.width = outW;
+  c.height = outH;
+  const ctx = c.getContext('2d');
+  ctx.translate(outW / 2, outH / 2);
+  ctx.rotate(state.rotate * Math.PI / 180);
+  if (state.flipH) ctx.scale(-1, 1);
+  if (state.flipV) ctx.scale(1, -1);
+  ctx.drawImage(src, -w / 2, -h / 2);
+  return c;
+}
+
+// 显式调整尺寸(等比/非等比)
+function applyResize(src) {
+  const rw = parseInt(resizeWInput.value, 10) || 0;
+  const rh = parseInt(resizeHInput.value, 10) || 0;
+  if (!rw && !rh) return src;
+  const w = src.width, h = src.height;
+  let nw = rw || w, nh = rh || h;
+  if (resizeLock.checked) {
+    const ar = w / h;
+    if (rw && !rh) nh = Math.round(rw / ar);
+    else if (rh && !rw) nw = Math.round(rh * ar);
+    else { nw = rw; nh = Math.round(rw / ar); }
+  }
+  nw = Math.min(MAX_DIM, Math.max(1, nw));
+  nh = Math.min(MAX_DIM, Math.max(1, nh));
+  const c = document.createElement('canvas');
+  c.width = nw;
+  c.height = nh;
+  c.getContext('2d').drawImage(src, 0, 0, nw, nh);
+  return c;
 }
 
 // 画水印
@@ -212,9 +293,6 @@ function drawWatermark(ctx, w, h, text) {
   ctx.shadowBlur = 0; // 重置,避免影响后续
 }
 
-// 超长边上限:超大图在手机上 canvas 会内存溢出导致出图失败,按比例缩小
-const MAX_DIM = 4096;
-
 function canvasToBlob(canvas, mime, quality) {
   return new Promise((resolve) => {
     canvas.toBlob((blob) => resolve(blob || null), mime, quality);
@@ -236,25 +314,19 @@ async function processOne(file, index) {
   let wmText = wmTextInput.value.trim();
   if (!state.premium && !wmText) wmText = '图轻松';
 
-  // 超大图按比例缩小,避免移动端 canvas 内存溢出
-  let drawW = origW, drawH = origH;
-  if (Math.max(origW, origH) > MAX_DIM) {
-    const scale = MAX_DIM / Math.max(origW, origH);
-    drawW = Math.round(origW * scale);
-    drawH = Math.round(origH * scale);
-  }
+  // 1) 先缩到安全尺寸(超长边 ≤ MAX_DIM),避免移动端内存溢出
+  const s = Math.min(1, MAX_DIM / Math.max(origW, origH));
+  let cv = imageToCanvas(img, Math.round(origW * s), Math.round(origH * s));
 
-  const canvas = document.createElement('canvas');
-  canvas.width = drawW;
-  canvas.height = drawH;
-  const ctx = canvas.getContext('2d');
-  ctx.drawImage(img, 0, 0, drawW, drawH);
+  // 2) 裁剪 → 3) 旋转/翻转 → 4) 显式调整尺寸 → 5) 水印 → 6) 编码
+  if (state.crop) cv = applyCrop(cv, state.crop);
+  if (state.rotate || state.flipH || state.flipV) cv = transformCanvas(cv);
+  cv = applyResize(cv);
 
-  drawWatermark(ctx, drawW, drawH, wmText);
+  drawWatermark(cv.getContext('2d'), cv.width, cv.height, wmText);
 
-  // 用 blob 而非 dataURL:预览图(blob URL)手机更稳,下载/分享也能直接用
   const mime = formatSel.value;
-  const blob = await canvasToBlob(canvas, mime, quality);
+  const blob = await canvasToBlob(cv, mime, quality);
   if (!blob) throw new Error('生成图片失败,可能图片过大');
   const url = URL.createObjectURL(blob);
   const outSize = blob.size;
@@ -262,7 +334,7 @@ async function processOne(file, index) {
   const savedBytes = origSize - outSize;
   const savedPct = Math.round((savedBytes / origSize) * 100);
 
-  return { img, blob, url, outSize, file, origSize, origW, origH, savedBytes, savedPct, mime };
+  return { blob, url, outSize, file, origSize, savedBytes, savedPct, mime };
 }
 
 function fmtSize(bytes) {
@@ -303,6 +375,149 @@ async function downloadImage(blob, filename) {
 }
 
 // ============================================================
+// 裁剪交互
+// ============================================================
+let cropImg = null;       // 正在裁剪的图片
+let cropScale = 1;        // 原图像素 -> 画布显示 的比例(仅用于展示)
+let cropDrag = null;      // 拖拽起点 {x,y}(画布坐标)
+let cropRectDisp = null;  // 当前框选(画布坐标){x,y,w,h}
+
+function getCanvasPos(clientX, clientY) {
+  const rect = cropCanvas.getBoundingClientRect();
+  const x = (clientX - rect.left) * (cropCanvas.width / rect.width);
+  const y = (clientY - rect.top) * (cropCanvas.height / rect.height);
+  return {
+    x: Math.min(Math.max(x, 0), cropCanvas.width),
+    y: Math.min(Math.max(y, 0), cropCanvas.height),
+  };
+}
+
+function normRect(x1, y1, x2, y2) {
+  return { x: Math.min(x1, x2), y: Math.min(y1, y2), w: Math.abs(x2 - x1), h: Math.abs(y2 - y1) };
+}
+
+function drawCrop() {
+  const ctx = cropCanvas.getContext('2d');
+  ctx.clearRect(0, 0, cropCanvas.width, cropCanvas.height);
+  ctx.drawImage(cropImg, 0, 0, cropCanvas.width, cropCanvas.height);
+  if (cropRectDisp && cropRectDisp.w > 1 && cropRectDisp.h > 1) {
+    const r = cropRectDisp;
+    // 选区外压暗
+    ctx.fillStyle = 'rgba(0,0,0,0.45)';
+    ctx.fillRect(0, 0, cropCanvas.width, r.y);
+    ctx.fillRect(0, r.y, r.x, r.h);
+    ctx.fillRect(r.x + r.w, r.y, cropCanvas.width - r.x - r.w, r.h);
+    ctx.fillRect(0, r.y + r.h, cropCanvas.width, cropCanvas.height - r.y - r.h);
+    // 选区边框
+    ctx.strokeStyle = '#4f7cff';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2);
+  }
+}
+
+function openCrop() {
+  if (!state.files.length) { alert('请先选择图片'); return; }
+  loadFile(state.files[0]).then((img) => {
+    cropImg = img;
+    const maxW = Math.min(window.innerWidth * 0.92, 720);
+    const maxH = Math.min(window.innerHeight * 0.5, 480);
+    cropScale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
+    cropCanvas.width = Math.max(1, Math.round(img.naturalWidth * cropScale));
+    cropCanvas.height = Math.max(1, Math.round(img.naturalHeight * cropScale));
+    cropRectDisp = null;
+    cropDrag = null;
+    drawCrop();
+    cropModal.hidden = false;
+  });
+}
+
+function updateCropStatus() {
+  cropStatus.textContent = state.crop ? '✓ 已选裁剪区域' : '';
+}
+
+cropBtn.addEventListener('click', openCrop);
+cropClear.addEventListener('click', () => { state.crop = null; updateCropStatus(); });
+cropCancel.addEventListener('click', () => { cropModal.hidden = true; });
+closeCrop.addEventListener('click', () => { cropModal.hidden = true; });
+cropModal.addEventListener('click', (e) => { if (e.target === cropModal) cropModal.hidden = true; });
+cropApply.addEventListener('click', () => {
+  if (!cropRectDisp || cropRectDisp.w < 6 || cropRectDisp.h < 6) {
+    alert('请先拖拽框选要保留的区域');
+    return;
+  }
+  state.crop = {
+    nx: cropRectDisp.x / cropCanvas.width,
+    ny: cropRectDisp.y / cropCanvas.height,
+    nw: cropRectDisp.w / cropCanvas.width,
+    nh: cropRectDisp.h / cropCanvas.height,
+  };
+  cropModal.hidden = true;
+  updateCropStatus();
+});
+
+// 鼠标拖拽
+cropCanvas.addEventListener('mousedown', (e) => {
+  e.preventDefault();
+  const p = getCanvasPos(e.clientX, e.clientY);
+  cropDrag = { x: p.x, y: p.y };
+});
+window.addEventListener('mousemove', (e) => {
+  if (!cropDrag) return;
+  const p = getCanvasPos(e.clientX, e.clientY);
+  cropRectDisp = normRect(cropDrag.x, cropDrag.y, p.x, p.y);
+  drawCrop();
+});
+window.addEventListener('mouseup', () => { cropDrag = null; });
+
+// 触摸拖拽(手机)
+cropCanvas.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  const t = e.touches[0];
+  if (!t) return;
+  const p = getCanvasPos(t.clientX, t.clientY);
+  cropDrag = { x: p.x, y: p.y };
+}, { passive: false });
+window.addEventListener('touchmove', (e) => {
+  if (!cropDrag) return;
+  e.preventDefault();
+  const t = e.touches[0];
+  if (!t) return;
+  const p = getCanvasPos(t.clientX, t.clientY);
+  cropRectDisp = normRect(cropDrag.x, cropDrag.y, p.x, p.y);
+  drawCrop();
+}, { passive: false });
+window.addEventListener('touchend', () => { cropDrag = null; });
+
+// ============================================================
+// 旋转/翻转
+// ============================================================
+function updateRotateStatus() {
+  const parts = [];
+  if (state.rotate) parts.push(state.rotate + '°');
+  if (state.flipH) parts.push('水平翻转');
+  if (state.flipV) parts.push('垂直翻转');
+  rotateStatus.textContent = parts.length ? parts.join(' · ') : '';
+}
+document.querySelectorAll('.btn-rotate').forEach((btn) => {
+  btn.addEventListener('click', () => {
+    if (btn.dataset.rotate !== undefined) {
+      state.rotate = (state.rotate + parseInt(btn.dataset.rotate, 10) + 360) % 360;
+    } else if (btn.dataset.flip === 'h') {
+      state.flipH = !state.flipH;
+    } else if (btn.dataset.flip === 'v') {
+      state.flipV = !state.flipV;
+    }
+    updateRotateStatus();
+  });
+});
+document.getElementById('rotateReset').addEventListener('click', () => {
+  state.rotate = 0;
+  state.flipH = false;
+  state.flipV = false;
+  updateRotateStatus();
+});
+
+// ============================================================
 // 渲染结果
 // ============================================================
 function renderResult(item, index) {
@@ -310,7 +525,7 @@ function renderResult(item, index) {
   div.className = 'result-item';
 
   const base = item.file.name.replace(/\.[^.]+$/, '');
-  const outName = base + '_压缩.' + extFromMime(item.mime);
+  const outName = base + '_处理.' + extFromMime(item.mime);
 
   div.innerHTML = `
     <img src="${item.url}" alt="" />
@@ -405,9 +620,14 @@ document.querySelectorAll('.nav-item').forEach((item) => {
     document.querySelectorAll('.nav-item').forEach((n) => n.classList.remove('active'));
     item.classList.add('active');
     const view = item.dataset.view;
-    // 高亮对应控制组,其余置灰
-    const map = { compress: '#group-quality', convert: '#group-format', watermark: '#group-watermark' };
-    ['#group-quality', '#group-format', '#group-watermark'].forEach((sel) => {
+    const map = {
+      compress: '#group-quality',
+      convert: '#group-format',
+      watermark: '#group-watermark',
+      resize: '#group-resize',
+      rotate: '#group-rotate',
+    };
+    ['#group-quality', '#group-format', '#group-watermark', '#group-resize', '#group-rotate'].forEach((sel) => {
       $(sel).style.opacity = sel === map[view] ? '1' : '0.45';
     });
   });
@@ -468,3 +688,5 @@ async function initAuth() {
   refreshAuthUI();
 }
 initAuth();
+updateRotateStatus();
+updateCropStatus();

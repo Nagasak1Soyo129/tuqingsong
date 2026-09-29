@@ -6,3 +6,5 @@ desktop.ini
 # 激活码(密钥,切勿提交到仓库!)
 tools/codes.txt
 tools/codes.json
+
+.cf-token
