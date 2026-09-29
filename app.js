@@ -3,11 +3,14 @@
 // 纯前端处理,图片不出浏览器,无服务器成本
 // 变现:免费版 = 单张 + 强制水印 + 质量上限 80%
 //       会员  = 批量 + 去水印 + 高清(质量 100%)
+// 会员绑定账号(注册/登录),激活码激活后跨设备生效
 // ============================================================
 
 const state = {
-  files: [],       // 原始 File 列表
-  premium: false,  // 是否会员
+  files: [],                                                   // 原始 File 列表
+  token: localStorage.getItem('tqs_token') || '',              // 登录 token
+  user: null,                                                  // { username, premium, admin }
+  premium: false,
 };
 
 // ---- DOM 引用 ----
@@ -27,6 +30,7 @@ const wmPosSel = $('#wmPos');
 const processBtn = $('#processBtn');
 const clearBtn = $('#clearBtn');
 
+const accountBtn = $('#accountBtn');
 const upgradeBtn = $('#upgradeBtn');
 const upgradeModal = $('#upgradeModal');
 const closeModal = $('#closeModal');
@@ -34,43 +38,121 @@ const codeInput = $('#codeInput');
 const activateBtn = $('#activateBtn');
 const activateMsg = $('#activateMsg');
 
+const loginModal = $('#loginModal');
+const closeLogin = $('#closeLogin');
+const loginTitle = $('#loginTitle');
+const tabLogin = $('#tabLogin');
+const tabRegister = $('#tabRegister');
+const authUser = $('#authUser');
+const authPass = $('#authPass');
+const authSubmit = $('#authSubmit');
+const authMsgEl = $('#authMsg');
+
 // ============================================================
-// 会员系统(演示版,用 localStorage 存激活码)
-// 正式上线时:把激活码校验接到你自己的后端 / 收款回调
+// 账号系统(注册/登录,后端校验,会员状态存服务器)
 // ============================================================
-const ACTIVATION_KEY = 'tqs_premium';
-const ADMIN_KEY = 'tqs_admin';
+const TOKEN_KEY = 'tqs_token';
+let authMode = 'login'; // 'login' | 'register'
 
 function isPremium() {
-  return localStorage.getItem(ACTIVATION_KEY) === '1' || localStorage.getItem(ADMIN_KEY) === '1';
+  return !!(state.user && state.user.premium);
 }
 function isAdmin() {
-  return localStorage.getItem(ADMIN_KEY) === '1';
+  return !!(state.user && state.user.admin);
 }
-function refreshPremiumUI() {
+function refreshAuthUI() {
   state.premium = isPremium();
-  if (state.premium) {
-    upgradeBtn.textContent = isAdmin() ? '👑 管理员' : '👑 已开通会员';
-    upgradeBtn.style.background = 'linear-gradient(135deg, var(--ok), #2bb673)';
+  const u = state.user;
+  if (u) {
+    if (u.admin) accountBtn.textContent = `👑 ${u.username}`;
+    else if (u.premium) accountBtn.textContent = `👤 ${u.username} · 会员`;
+    else accountBtn.textContent = `👤 ${u.username}`;
+    upgradeBtn.textContent = u.premium ? '👑 已开通会员' : '⭐ 升级会员';
+    upgradeBtn.style.background = u.premium ? 'linear-gradient(135deg, var(--ok), #2bb673)' : '';
   } else {
+    accountBtn.textContent = '登录';
     upgradeBtn.textContent = '⭐ 升级会员';
     upgradeBtn.style.background = '';
   }
 }
 
-// 激活:调用后端 /api/activate 校验(激活码不再写死在网页里,别人看不到也破解不了)
+function setAuthMode(mode) {
+  authMode = mode;
+  loginTitle.textContent = mode === 'login' ? '登录' : '注册';
+  authSubmit.textContent = mode === 'login' ? '登录' : '注册';
+  tabLogin.classList.toggle('active', mode === 'login');
+  tabRegister.classList.toggle('active', mode === 'register');
+  authMsg('');
+}
+function authMsg(text, ok) {
+  authMsgEl.textContent = text || '';
+  authMsgEl.className = 'activate-msg' + (text ? (ok ? ' ok' : ' err') : '');
+}
+
+async function authSubmitHandler() {
+  const username = authUser.value.trim();
+  const password = authPass.value;
+  if (!username) { authMsg('请输入用户名', false); return; }
+  if (password.length < 6) { authMsg('密码至少 6 位', false); return; }
+  authSubmit.disabled = true;
+  try {
+    const res = await fetch('/api/' + (authMode === 'login' ? 'login' : 'register'), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      state.token = data.token;
+      state.user = data.user;
+      localStorage.setItem(TOKEN_KEY, data.token);
+      authMsg(authMode === 'login' ? '✅ 登录成功' : '✅ 注册成功', true);
+      refreshAuthUI();
+      setTimeout(() => { loginModal.hidden = true; authPass.value = ''; authMsg(''); }, 600);
+    } else {
+      authMsg('❌ ' + (data.msg || '操作失败'), false);
+    }
+  } catch (e) {
+    authMsg('❌ 网络错误,请稍后重试', false);
+  } finally {
+    authSubmit.disabled = false;
+  }
+}
+
+async function logout() {
+  if (!confirm('确定退出登录?')) return;
+  try {
+    await fetch('/api/logout', {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + state.token },
+    });
+  } catch (e) {}
+  state.token = '';
+  state.user = null;
+  localStorage.removeItem(TOKEN_KEY);
+  refreshAuthUI();
+}
+
+// 激活码:需登录,激活后写入账号(会员跨设备)
 async function activateCode() {
+  if (!state.user) {
+    showMsg('请先登录账号', false);
+    setAuthMode('login');
+    loginModal.hidden = false;
+    return;
+  }
   const code = codeInput.value.trim();
   if (!code) { showMsg('请输入激活码', false); return; }
   activateBtn.disabled = true;
   try {
-    const res = await fetch('/api/activate?code=' + encodeURIComponent(code));
+    const res = await fetch('/api/activate?code=' + encodeURIComponent(code), {
+      headers: { Authorization: 'Bearer ' + state.token },
+    });
     const data = await res.json();
     if (data.ok) {
-      localStorage.setItem(ACTIVATION_KEY, '1');
-      if (data.admin) localStorage.setItem(ADMIN_KEY, '1');
+      if (data.user) state.user = data.user;
       showMsg(data.admin ? '👑 主控激活成功(管理员模式)' : '✅ 激活成功,会员已生效!', true);
-      refreshPremiumUI();
+      refreshAuthUI();
     } else {
       showMsg('❌ ' + (data.msg || '激活码无效'), false);
     }
@@ -340,6 +422,24 @@ upgradeModal.addEventListener('click', (e) => {
 activateBtn.addEventListener('click', activateCode);
 codeInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') activateCode(); });
 
+// 账号弹窗
+accountBtn.addEventListener('click', () => {
+  if (state.user) {
+    if (confirm('已登录 ' + state.user.username + ',退出登录?')) logout();
+  } else {
+    setAuthMode('login');
+    loginModal.hidden = false;
+  }
+});
+closeLogin.addEventListener('click', () => { loginModal.hidden = true; });
+loginModal.addEventListener('click', (e) => {
+  if (e.target === loginModal) loginModal.hidden = true;
+});
+tabLogin.addEventListener('click', () => setAuthMode('login'));
+tabRegister.addEventListener('click', () => setAuthMode('register'));
+authSubmit.addEventListener('click', authSubmitHandler);
+authPass.addEventListener('keydown', (e) => { if (e.key === 'Enter') authSubmitHandler(); });
+
 // 套餐按钮:上线后跳转收款链接,这里先提示
 document.querySelectorAll('.btn-plan').forEach((btn) => {
   btn.addEventListener('click', () => {
@@ -353,5 +453,18 @@ document.querySelectorAll('.btn-plan').forEach((btn) => {
   });
 });
 
-// 初始化
-refreshPremiumUI();
+// 初始化:先看本地 token 是否有效,再刷新 UI
+async function initAuth() {
+  if (state.token) {
+    try {
+      const res = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + state.token } });
+      const data = await res.json();
+      if (data.ok) state.user = data.user;
+      else { state.token = ''; localStorage.removeItem(TOKEN_KEY); }
+    } catch (e) {
+      // 网络异常先不清 token,避免误登出
+    }
+  }
+  refreshAuthUI();
+}
+initAuth();
