@@ -660,10 +660,22 @@ tabRegister.addEventListener('click', () => setAuthMode('register'));
 authSubmit.addEventListener('click', authSubmitHandler);
 authPass.addEventListener('keydown', (e) => { if (e.key === 'Enter') authSubmitHandler(); });
 
-// 套餐按钮:上线后跳转收款链接,这里先提示
+// 发卡平台购买链接 —— 拿到发卡平台的商品链接后,把下面两个网址替换掉即可
+// 留空则退回显示微信收款码(手动发码)
+const PAY_LINKS = {
+  month: '',
+  lifetime: '',
+};
+
+// 套餐按钮:配了发卡平台链接就跳过去,否则展示收款码
 document.querySelectorAll('.btn-plan').forEach((btn) => {
   btn.addEventListener('click', () => {
     const plan = btn.dataset.plan;
+    const link = PAY_LINKS[plan];
+    if (link) {
+      window.open(link, '_blank');
+      return;
+    }
     const amount = plan === 'lifetime' ? '¥49 终身买断' : '¥9.9 月度';
     const qrAmount = document.getElementById('qrAmount');
     const sec = document.getElementById('payQrSection');
