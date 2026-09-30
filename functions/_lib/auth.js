@@ -16,6 +16,11 @@ export function normalizeUsername(s) {
   return String(s || '').trim().toLowerCase().replace(/[^\w一-龥]/g, '').slice(0, 32);
 }
 
+// 归一化邮箱:去空白、转小写
+export function normalizeEmail(s) {
+  return String(s || '').trim().toLowerCase().slice(0, 128);
+}
+
 export function randomHex(bytes) {
   const arr = new Uint8Array(bytes);
   crypto.getRandomValues(arr);
@@ -52,6 +57,7 @@ export function isPremium(u) {
 export function publicUser(u) {
   return {
     username: u.username,
+    email: u.email || null,
     premium: isPremium(u),
     premiumUntil: u.premiumUntil || null,
     admin: !!u.admin,
