@@ -17,6 +17,10 @@
 - ✅ 已选图片预览(缩略图 · 单张移除 · 点击看大图)
 - ✅ PDF 合并(多个 PDF 合成一个,可调顺序,会员)
 - ✅ PDF 拆分 / 提取页(按页拆成单独 PDF 打包 ZIP,或提取指定页)
+- ✅ PDF 加水印(文字/图片,平铺防截图,可调角度透明度)
+- ✅ PDF 加页码(多种格式与位置,可跳过封面)
+- ✅ PDF 页面管理(删页 / 旋转 / 调序 / 插入空白页)
+- ✅ PDF 盖章(公章、签名、二维码贴到指定页)
 - ✅ 图片本地处理,隐私安全
 
 ## 免费 vs 会员
@@ -47,7 +51,8 @@
 - 后端:Cloudflare Pages Functions(`functions/api/*`),账号数据存 Cloudflare KV(绑定名 `USERS`)
 - 环境变量:`MASTER_CODE`(主控码)、`VALID_CODES`(有效激活码列表)、`XH_APPID`/`XH_SECRET`(虎皮椒支付)
 - 部署:GitHub 仓库 → Cloudflare Pages(Git 集成自动部署)
-- PDF 处理:引入 [pdf-lib](https://github.com/Hopding/pdf-lib)(MIT)做合并/拆分,**自托管在 `vendor/`**(不走 CDN,避免国内 CDN 被墙导致功能失效),只在用到 PDF 工具时懒加载,不影响首屏速度
+- PDF 处理:引入 [pdf-lib](https://github.com/Hopding/pdf-lib)(MIT)做合并/拆分/页面管理/叠加内容,**自托管在 `vendor/`**(不走 CDN,避免国内 CDN 被墙导致功能失效),只在用到 PDF 工具时懒加载,不影响首屏速度
+- **中文水印/页码的实现**:pdf-lib 内置字体不支持中文,嵌入 CJK 字体又要 5~15MB。改用 **canvas 把文字渲染成 PNG(3 倍超采样)再贴进 PDF**,天然支持中文与任意字体,零字体文件开销。代价是水印文字不可选中/搜索(对水印和页码无影响)
 
 ## 文件结构
 

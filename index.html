@@ -29,8 +29,13 @@
     <button class="tool-tab" data-view="collage">拼图<span class="tab-tag">会员</span></button>
     <button class="tool-tab" data-view="topdf">转PDF</button>
     <button class="tool-tab" data-view="tobase64">转Base64</button>
+    <span class="toolbar-sep" aria-hidden="true"></span>
     <button class="tool-tab" data-view="pdfmerge">PDF合并<span class="tab-tag">会员</span></button>
     <button class="tool-tab" data-view="pdfsplit">PDF拆分</button>
+    <button class="tool-tab" data-view="pdfwatermark">PDF水印</button>
+    <button class="tool-tab" data-view="pdfpagenum">PDF页码</button>
+    <button class="tool-tab" data-view="pdfpages">PDF页面</button>
+    <button class="tool-tab" data-view="pdfstamp">PDF盖章</button>
   </nav>
 
   <main>
@@ -274,6 +279,160 @@
       </div>
       <button class="btn-primary" data-process="pdfsplit">开始拆分</button>
       <p class="tp-lock" id="pdfsplitLock" hidden>🔒 「每页拆成单独 PDF」会输出多个文件,<a class="link-upgrade" id="pdfsplitUpgrade">升级会员解锁</a></p>
+    </section>
+
+    <!-- ============ PDF 水印 ============ -->
+    <section class="tool-panel" data-panel="pdfwatermark" hidden>
+      <div class="tp-head"><h2>PDF 加水印</h2><p>给每页叠加文字或图片水印(中文用 canvas 渲染,不依赖字体文件)</p></div>
+      <div class="tp-grid">
+        <div class="tp-field">
+          <label>水印类型</label>
+          <select id="pdfwmType">
+            <option value="text">文字水印</option>
+            <option value="image">图片水印</option>
+          </select>
+        </div>
+        <div class="tp-field" id="pdfwmTextField">
+          <label>水印文字</label>
+          <input type="text" id="pdfwmText" placeholder="如:机密 / 仅供XX使用" />
+        </div>
+        <div class="tp-field" id="pdfwmImageField" hidden>
+          <label>水印图片</label>
+          <input type="file" id="pdfwmImage" accept="image/*" />
+        </div>
+        <div class="tp-field">
+          <label>排版</label>
+          <select id="pdfwmLayout">
+            <option value="tile">平铺(满页重复,防截图盗用)</option>
+            <option value="center">居中大字</option>
+            <option value="br">右下角</option>
+            <option value="bl">左下角</option>
+            <option value="tr">右上角</option>
+            <option value="tl">左上角</option>
+          </select>
+        </div>
+        <div class="tp-field" id="pdfwmSizeField">
+          <label>字号 <span class="val" id="pdfwmSizeVal">48</span></label>
+          <input type="range" id="pdfwmSize" min="12" max="120" value="48" />
+        </div>
+        <div class="tp-field">
+          <label>不透明度 <span class="val" id="pdfwmOpacityVal">15%</span></label>
+          <input type="range" id="pdfwmOpacity" min="5" max="100" value="15" />
+        </div>
+        <div class="tp-field" id="pdfwmAngleField">
+          <label>旋转角度 <span class="val" id="pdfwmAngleVal">-30</span></label>
+          <input type="range" id="pdfwmAngle" min="-90" max="90" value="-30" />
+        </div>
+        <div class="tp-field" id="pdfwmColorField">
+          <label>颜色</label>
+          <input type="color" id="pdfwmColor" value="#e5484d" />
+        </div>
+        <div class="tp-field">
+          <label>水印大小(占页宽)<span class="val" id="pdfwmScaleVal">30%</span></label>
+          <input type="range" id="pdfwmScale" min="5" max="100" value="30" />
+        </div>
+        <div class="tp-field">
+          <label>应用页(如 1-3,5;留空=全部)</label>
+          <input type="text" id="pdfwmPages" placeholder="留空 = 全部页" />
+        </div>
+      </div>
+      <button class="btn-primary" data-process="pdfwatermark">添加水印</button>
+    </section>
+
+    <!-- ============ PDF 页码 ============ -->
+    <section class="tool-panel" data-panel="pdfpagenum" hidden>
+      <div class="tp-head"><h2>PDF 加页码</h2><p id="pgnumInfo">选择一个 PDF 后显示页数</p></div>
+      <div class="tp-grid">
+        <div class="tp-field">
+          <label>页码格式</label>
+          <select id="pgnumFormat">
+            <option value="cn">第 {n} 页 / 共 {total} 页</option>
+            <option value="slash">{n} / {total}</option>
+            <option value="dash">- {n} -</option>
+            <option value="plain">{n}</option>
+          </select>
+        </div>
+        <div class="tp-field">
+          <label>位置</label>
+          <select id="pgnumPos">
+            <option value="bc">底部居中</option>
+            <option value="br">底部右侧</option>
+            <option value="bl">底部左侧</option>
+            <option value="tc">顶部居中</option>
+            <option value="tr">顶部右侧</option>
+            <option value="tl">顶部左侧</option>
+          </select>
+        </div>
+        <div class="tp-field">
+          <label>起始页码</label>
+          <input type="number" id="pgnumStart" value="1" min="1" />
+        </div>
+        <div class="tp-field">
+          <label>字号 <span class="val" id="pgnumSizeVal">11</span></label>
+          <input type="range" id="pgnumSize" min="6" max="36" value="11" />
+        </div>
+        <div class="tp-field">
+          <label>颜色</label>
+          <input type="color" id="pgnumColor" value="#444444" />
+        </div>
+        <div class="tp-field">
+          <label>封面</label>
+          <label class="switch"><input type="checkbox" id="pgnumSkipFirst" /><span class="switch-slider"></span><span class="switch-label">跳过第一页不加</span></label>
+        </div>
+      </div>
+      <button class="btn-primary" data-process="pdfpagenum">添加页码</button>
+    </section>
+
+    <!-- ============ PDF 页面管理 ============ -->
+    <section class="tool-panel" data-panel="pdfpages" hidden>
+      <div class="tp-head"><h2>PDF 页面管理</h2><p id="pagesInfo">选择一个 PDF 后显示页面</p></div>
+      <div class="page-tools">
+        <button class="btn-tool" id="pagesReset">↺ 重置</button>
+        <button class="btn-tool" id="pagesInsert">＋ 末尾插入空白页</button>
+      </div>
+      <div id="pageGrid" class="page-grid"></div>
+      <p class="muted" id="pagesSummary"></p>
+      <button class="btn-primary" data-process="pdfpages">保存为新 PDF</button>
+    </section>
+
+    <!-- ============ PDF 盖章 / 插入图片 ============ -->
+    <section class="tool-panel" data-panel="pdfstamp" hidden>
+      <div class="tp-head"><h2>插入图片 / 盖章</h2><p>把公章、签名、二维码贴到 PDF 页面上</p></div>
+      <div class="tp-grid">
+        <div class="tp-field">
+          <label>选择图片(公章 / 签名 / 二维码)</label>
+          <input type="file" id="stampImageInput" accept="image/*" />
+        </div>
+        <div class="tp-field">
+          <label>位置</label>
+          <select id="stampPos">
+            <option value="br">右下角</option>
+            <option value="bc">底部居中</option>
+            <option value="bl">左下角</option>
+            <option value="tr">右上角</option>
+            <option value="tc">顶部居中</option>
+            <option value="tl">左上角</option>
+            <option value="center">居中</option>
+          </select>
+        </div>
+        <div class="tp-field">
+          <label>图片宽度(占页宽)<span class="val" id="stampScaleVal">25%</span></label>
+          <input type="range" id="stampScale" min="3" max="100" value="25" />
+        </div>
+        <div class="tp-field">
+          <label>不透明度 <span class="val" id="stampOpacityVal">100%</span></label>
+          <input type="range" id="stampOpacity" min="10" max="100" value="100" />
+        </div>
+        <div class="tp-field">
+          <label>页边距 <span class="val" id="stampMarginVal">24</span></label>
+          <input type="range" id="stampMargin" min="0" max="200" value="24" />
+        </div>
+        <div class="tp-field">
+          <label>应用页(如 1-3,5;留空=全部)</label>
+          <input type="text" id="stampPages" placeholder="留空 = 全部页" />
+        </div>
+      </div>
+      <button class="btn-primary" data-process="pdfstamp">插入图片</button>
     </section>
 
     <!-- 结果区 -->

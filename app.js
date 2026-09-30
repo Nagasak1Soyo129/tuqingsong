@@ -94,6 +94,51 @@ const splitRange = $('#splitRange');
 const splitRangeField = $('#splitRangeField');
 const pdfsplitLock = $('#pdfsplitLock');
 const pdfsplitUpgrade = $('#pdfsplitUpgrade');
+// PDF 水印
+const pdfwmType = $('#pdfwmType');
+const pdfwmTextField = $('#pdfwmTextField');
+const pdfwmImageField = $('#pdfwmImageField');
+const pdfwmText = $('#pdfwmText');
+const pdfwmImage = $('#pdfwmImage');
+const pdfwmLayout = $('#pdfwmLayout');
+const pdfwmSizeField = $('#pdfwmSizeField');
+const pdfwmSize = $('#pdfwmSize');
+const pdfwmSizeVal = $('#pdfwmSizeVal');
+const pdfwmOpacity = $('#pdfwmOpacity');
+const pdfwmOpacityVal = $('#pdfwmOpacityVal');
+const pdfwmAngleField = $('#pdfwmAngleField');
+const pdfwmAngle = $('#pdfwmAngle');
+const pdfwmAngleVal = $('#pdfwmAngleVal');
+const pdfwmColorField = $('#pdfwmColorField');
+const pdfwmColor = $('#pdfwmColor');
+const pdfwmScale = $('#pdfwmScale');
+const pdfwmScaleVal = $('#pdfwmScaleVal');
+const pdfwmPages = $('#pdfwmPages');
+// PDF 页码
+const pgnumInfo = $('#pgnumInfo');
+const pgnumFormat = $('#pgnumFormat');
+const pgnumPos = $('#pgnumPos');
+const pgnumStart = $('#pgnumStart');
+const pgnumSize = $('#pgnumSize');
+const pgnumSizeVal = $('#pgnumSizeVal');
+const pgnumColor = $('#pgnumColor');
+const pgnumSkipFirst = $('#pgnumSkipFirst');
+// PDF 页面管理
+const pagesInfo = $('#pagesInfo');
+const pagesReset = $('#pagesReset');
+const pagesInsert = $('#pagesInsert');
+const pageGrid = $('#pageGrid');
+const pagesSummary = $('#pagesSummary');
+// PDF 盖章
+const stampImageInput = $('#stampImageInput');
+const stampPos = $('#stampPos');
+const stampScale = $('#stampScale');
+const stampScaleVal = $('#stampScaleVal');
+const stampOpacity = $('#stampOpacity');
+const stampOpacityVal = $('#stampOpacityVal');
+const stampMargin = $('#stampMargin');
+const stampMarginVal = $('#stampMarginVal');
+const stampPages = $('#stampPages');
 // Base64
 const b64Result = $('#b64Result');
 const b64Text = $('#b64Text');
@@ -337,7 +382,7 @@ async function generateCodes() {
 // ============================================================
 // PDF 支持(pdf-lib 自托管在 /vendor/,按需懒加载,不拖慢主页面)
 // ============================================================
-const PDF_TOOLS = ['pdfmerge', 'pdfsplit'];
+const PDF_TOOLS = ['pdfmerge', 'pdfsplit', 'pdfwatermark', 'pdfpagenum', 'pdfpages', 'pdfstamp'];
 
 function isPdfTool(view) { return PDF_TOOLS.includes(view); }
 
@@ -389,6 +434,106 @@ function parsePageRange(str, total) {
   }
   // 去重且保序
   return [...new Set(out)];
+}
+
+// ---- 文字转 PNG(中文水印/页码靠它,避免引入几 MB 的中文字体文件)----
+// 浏览器自带中文字体,画到 canvas 再贴进 PDF;输出透明背景,可加旋转
+const TEXT_SS = 3; // 超采样倍数,保证贴进 PDF 后边缘不糊
+
+function textToPng(text, { fontSize, color, angle = 0, bold = true }) {
+  const font = `${bold ? 'bold ' : ''}${fontSize}px "PingFang SC", "Microsoft YaHei", "Heiti SC", sans-serif`;
+  const probe = document.createElement('canvas').getContext('2d');
+  probe.font = font;
+  const tw = Math.max(1, Math.ceil(probe.measureText(text).width));
+  const th = Math.ceil(fontSize * 1.35);
+
+  const rad = Math.abs(angle) * Math.PI / 180;
+  const pad = Math.ceil(fontSize * 0.35);
+  // 旋转后的外接矩形,避免转完被裁掉
+  const boxW = Math.ceil(tw * Math.cos(rad) + th * Math.sin(rad)) + pad * 2;
+  const boxH = Math.ceil(tw * Math.sin(rad) + th * Math.cos(rad)) + pad * 2;
+
+  const c = document.createElement('canvas');
+  c.width = boxW * TEXT_SS;
+  c.height = boxH * TEXT_SS;
+  const ctx = c.getContext('2d');
+  ctx.scale(TEXT_SS, TEXT_SS);
+  ctx.font = font;
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.translate(boxW / 2, boxH / 2);
+  ctx.rotate(angle * Math.PI / 180);
+  ctx.fillText(text, 0, 0);
+
+  return { dataUrl: c.toDataURL('image/png'), w: boxW, h: boxH };
+}
+
+// 把图片素材贴到一页上(位置用九宫格 + 边距,尺寸按页宽比例)
+function placeOnPage(page, emb, args) {
+  const { pos, widthPct, opacity, margin } = args;
+  const pw = page.getWidth(), ph = page.getHeight();
+  const w = pw * (widthPct / 100);
+  const h = w * (emb.height / emb.width);
+
+  let x, y;
+  switch (pos) {
+    case 'tl': x = margin;             y = ph - margin - h; break;
+    case 'tc': x = (pw - w) / 2;       y = ph - margin - h; break;
+    case 'tr': x = pw - margin - w;    y = ph - margin - h; break;
+    case 'bl': x = margin;             y = margin;          break;
+    case 'bc': x = (pw - w) / 2;       y = margin;          break;
+    case 'br': x = pw - margin - w;    y = margin;          break;
+    case 'center':
+    default:   x = (pw - w) / 2;       y = (ph - h) / 2;    break;
+  }
+  page.drawImage(emb, { x, y, width: w, height: h, opacity: opacity / 100 });
+}
+
+// 平铺:按水印尺寸在整页重复铺满(防截图/防复印效果)
+function tileOnPage(page, emb, args) {
+  const { widthPct, opacity, angle } = args;
+  const pw = page.getWidth(), ph = page.getHeight();
+  const w = pw * (widthPct / 100);
+  const h = w * (emb.height / emb.width);
+  const stepX = w * 1.25, stepY = h * 2.1;
+  // 必须让 (cols-1)*stepX + w ≥ pw 才算铺满;漏掉自己那一格会在页边留下无水印的空白
+  const cols = Math.max(1, Math.ceil((pw - w) / stepX) + 1);
+  const rows = Math.max(1, Math.ceil((ph - h) / stepY) + 1);
+  // 让整体居中:算出实际占用尺寸后回退半个格
+  const offX = (pw - (cols - 1) * stepX - w) / 2;
+  const offY = (ph - (rows - 1) * stepY - h) / 2;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      page.drawImage(emb, {
+        x: offX + c * stepX,
+        y: offY + r * stepY,
+        width: w,
+        height: h,
+        opacity: opacity / 100,
+        rotate: (angle || 0) * Math.PI / 180,
+      });
+    }
+  }
+}
+
+// 取当前已选 PDF 并打开;失败时提示并返回 null
+async function openSourcePdf() {
+  const f = state.files[0];
+  if (!f) { alert('请先选择一个 PDF 文件'); return null; }
+  if (!isPdfFile(f)) { alert('请选择一个 PDF 文件'); return null; }
+  const { PDFDocument } = await loadPdfLib();
+  try {
+    return { doc: await PDFDocument.load(await f.arrayBuffer()), file: f, PDFDocument };
+  } catch (e) {
+    alert(`无法读取「${f.name}」:文件可能已加密、有密码保护或已损坏`);
+    return null;
+  }
+}
+
+// 把 PDF 字节下载下来
+function savePdf(bytes, name) {
+  downloadImage(new Blob([bytes], { type: 'application/pdf' }), name);
 }
 
 // ============================================================
@@ -805,19 +950,29 @@ async function mergePdfs() {
 }
 
 // ---- PDF 拆分 ----
+// PDF 各面板的信息刷新统一入口
+async function refreshPdfPanels() {
+  await refreshSplitInfo();
+  await loadPageManager();
+}
+
 async function refreshSplitInfo() {
-  if (state.view !== 'pdfsplit') return;
+  if (state.view !== 'pdfsplit' && state.view !== 'pdfpagenum') return;
   const f = state.files[0];
-  if (!f) { splitInfo.textContent = '选择一个 PDF 后显示页数'; return; }
-  splitInfo.textContent = '正在读取页数…';
+  const target = state.view === 'pdfsplit' ? splitInfo : pgnumInfo;
+  const idle = state.view === 'pdfsplit'
+    ? '选择一个 PDF 后显示页数'
+    : '选择一个 PDF 后显示页数';
+  if (!f) { target.textContent = idle; return; }
+  target.textContent = '正在读取页数…';
   try {
     const n = await pdfPageCount(f);
     // 期间可能已换文件,避免写入过期结果
     if (state.files[0] !== f) return;
-    splitInfo.textContent = `《${f.name}》共 ${n} 页`;
+    target.textContent = `《${f.name}》共 ${n} 页`;
   } catch (e) {
     if (state.files[0] !== f) return;
-    splitInfo.textContent = '⚠ 无法读取该 PDF(可能已加密或损坏)';
+    target.textContent = '⚠ 无法读取该 PDF(可能已加密或损坏)';
   }
 }
 
@@ -865,6 +1020,303 @@ async function splitPdf() {
     }
   } catch (e) {
     alert('拆分失败:' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+// ---- PDF 水印 ----
+async function pdfWatermark() {
+  const src = await openSourcePdf();
+  if (!src) return;
+  const btn = document.querySelector('[data-process="pdfwatermark"]');
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  try {
+    const { doc } = src;
+    const type = pdfwmType.value;
+    const total = doc.getPageCount();
+    const idx = parsePageRange(pdfwmPages.value, total);
+    if (!idx.length) { alert(`页码范围无效,该 PDF 共 ${total} 页`); return; }
+
+    let emb;
+    if (type === 'text') {
+      const text = pdfwmText.value.trim();
+      if (!text) { alert('请输入水印文字'); return; }
+      btn.textContent = '生成水印…';
+      const png = textToPng(text, {
+        fontSize: parseInt(pdfwmSize.value, 10),
+        color: pdfwmColor.value,
+        angle: parseInt(pdfwmAngle.value, 10),
+      });
+      emb = await doc.embedPng(png.dataUrl);
+    } else {
+      const img = pdfwmImage.files && pdfwmImage.files[0];
+      if (!img) { alert('请选择一张水印图片'); return; }
+      btn.textContent = '读取图片…';
+      emb = await embedAnyImage(doc, img);
+      if (!emb) { alert('图片读取失败'); return; }
+    }
+
+    const args = {
+      widthPct: parseInt(pdfwmScale.value, 10),
+      opacity: parseInt(pdfwmOpacity.value, 10),
+      angle: parseInt(pdfwmAngle.value, 10),
+      margin: Math.round(doc.getPage(idx[0]).getWidth() * 0.04),
+      pos: pdfwmLayout.value,
+    };
+
+    const pages = doc.getPages();
+    const tiled = pdfwmLayout.value === 'tile';
+    idx.forEach((i) => {
+      if (tiled) tileOnPage(pages[i], emb, args);
+      else placeOnPage(pages[i], emb, args);
+    });
+
+    btn.textContent = '保存中…';
+    const base = src.file.name.replace(/\.pdf$/i, '');
+    savePdf(await doc.save(), `${base}_水印.pdf`);
+  } catch (e) {
+    alert('添加水印失败:' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+// 把任意浏览器能解码的图片(含 PNG 透明)嵌进 PDF
+async function embedAnyImage(doc, file) {
+  const buf = await file.arrayBuffer();
+  const isPng = /png$/i.test(file.type) || /\.png$/i.test(file.name);
+  if (isPng) return doc.embedPng(buf);
+  const isJpg = /jpe?g$/i.test(file.type) || /\.jpe?g$/i.test(file.name);
+  if (isJpg) return doc.embedJpg(buf);
+  // 其他格式(webp/gif/bmp 等)统一转成 PNG 再嵌入
+  const url = URL.createObjectURL(file);
+  try {
+    const img = await loadFile(file);
+    const c = document.createElement('canvas');
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    c.getContext('2d').drawImage(img, 0, 0);
+    return doc.embedPng(c.toDataURL('image/png'));
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+// ---- PDF 页码 ----
+async function pdfPageNum() {
+  const src = await openSourcePdf();
+  if (!src) return;
+  const btn = document.querySelector('[data-process="pdfpagenum"]');
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  try {
+    const { doc } = src;
+    const total = doc.getPageCount();
+    const start = Math.max(1, parseInt(pgnumStart.value, 10) || 1);
+    const fmt = pgnumFormat.value;
+    const fontSizePt = parseInt(pgnumSize.value, 10);
+    const color = pgnumColor.value;
+    const skipFirst = pgnumSkipFirst.checked;
+    const pages = doc.getPages();
+
+    // 缓存相同文字的 PNG,避免每页重复渲染
+    const cache = new Map();
+    const makePng = (label) => {
+      if (!cache.has(label)) cache.set(label, textToPng(label, { fontSize: 40, color, angle: 0, bold: false }));
+      return cache.get(label);
+    };
+
+    for (let i = 0; i < total; i++) {
+      if (skipFirst && i === 0) continue;
+      btn.textContent = `加页码… (${i + 1}/${total})`;
+      const n = start + (skipFirst ? i - 1 : i);
+      const label = fmt
+        .replace(/\{n\}/g, String(n))
+        .replace(/\{total\}/g, String(total + start - 1));
+      const png = makePng(label);
+      const emb = await doc.embedPng(png.dataUrl);
+      const page = pages[i];
+      // 按 PDF 点尺寸换算:让页码高度约为页高的 4%
+      const h = page.getHeight() * 0.04;
+      const w = h * (png.w / png.h);
+      const margin = page.getWidth() * 0.05;
+      const pw = page.getWidth(), ph = page.getHeight();
+      let x, y;
+      const pos = pgnumPos.value;
+      const bottom = pos[0] === 'b';
+      const right = pos[1] === 'r', center = pos[1] === 'c';
+      y = bottom ? margin : ph - margin - h;
+      if (right) x = pw - margin - w;
+      else if (center) x = (pw - w) / 2;
+      else x = margin;
+      page.drawImage(emb, { x, y, width: w, height: h });
+    }
+
+    btn.textContent = '保存中…';
+    const base = src.file.name.replace(/\.pdf$/i, '');
+    savePdf(await doc.save(), `${base}_页码.pdf`);
+  } catch (e) {
+    alert('添加页码失败:' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+// ---- PDF 页面管理 ----
+// 每项:{ srcIndex, rotate, deleted },srcIndex 指向原文档页;空白页 srcIndex = -1
+let pageModel = [];
+let pageSrcDoc = null;
+let pageSrcFile = null;
+
+async function loadPageManager() {
+  if (state.view !== 'pdfpages') return;
+  const f = state.files[0];
+  if (!f) {
+    pageSrcDoc = null; pageModel = []; pageSrcFile = null;
+    pagesInfo.textContent = '选择一个 PDF 后显示页面';
+    pageGrid.innerHTML = '';
+    pagesSummary.textContent = '';
+    return;
+  }
+  // 同一个文件就别重载了,否则来回切工具会把手动排好的页序冲掉
+  if (pageSrcFile === f && pageSrcDoc) return;
+
+  const src = await openSourcePdf();
+  if (!src) {
+    pageSrcDoc = null; pageModel = []; pageSrcFile = null; pageGrid.innerHTML = '';
+    pagesInfo.textContent = '无法读取该 PDF';
+    return;
+  }
+  pageSrcDoc = src.doc;
+  pageSrcFile = f;
+  pageModel = src.doc.getPageIndices().map((i) => ({ srcIndex: i, rotate: 0, deleted: false }));
+  pagesInfo.textContent = `《${src.file.name}》共 ${pageModel.length} 页`;
+  renderPageGrid();
+}
+
+function renderPageGrid() {
+  pageGrid.innerHTML = '';
+  pageModel.forEach((p, i) => {
+    const el = document.createElement('div');
+    el.className = 'page-card' + (p.deleted ? ' del' : '');
+    el.innerHTML = `
+      <div class="page-card-body">
+        <span class="page-card-num">${p.srcIndex < 0 ? '＋' : p.srcIndex + 1}</span>
+        <span class="page-card-rot">${p.rotate ? p.rotate + '°' : (p.srcIndex < 0 ? '空白' : '')}</span>
+      </div>
+      <div class="page-card-mv left">
+        <button data-act="up" title="前移" ${i === 0 ? 'disabled' : ''}>▲</button>
+        <button data-act="down" title="后移" ${i === pageModel.length - 1 ? 'disabled' : ''}>▼</button>
+      </div>
+      <div class="page-card-actions">
+        <button data-act="rot" title="顺时针旋转 90°">⟳</button>
+        <button data-act="del" title="${p.deleted ? '恢复此页' : '删除此页'}">${p.deleted ? '↺' : '🗑'}</button>
+      </div>
+    `;
+    el.querySelectorAll('button[data-act]').forEach((b) => {
+      b.addEventListener('click', () => {
+        const act = b.dataset.act;
+        if (act === 'up' && i > 0) { [pageModel[i - 1], pageModel[i]] = [pageModel[i], pageModel[i - 1]]; }
+        else if (act === 'down' && i < pageModel.length - 1) { [pageModel[i + 1], pageModel[i]] = [pageModel[i], pageModel[i + 1]]; }
+        else if (act === 'rot') { p.rotate = (p.rotate + 90) % 360; }
+        else if (act === 'del') { p.deleted = !p.deleted; }
+        else return;
+        renderPageGrid();
+      });
+    });
+    pageGrid.appendChild(el);
+  });
+  updatePagesSummary();
+}
+
+function updatePagesSummary() {
+  const kept = pageModel.filter((p) => !p.deleted);
+  const blank = kept.filter((p) => p.srcIndex < 0).length;
+  const rot = kept.filter((p) => p.rotate).length;
+  const parts = [`保留 ${kept.length} 页`];
+  if (rot) parts.push(`${rot} 页旋转`);
+  if (blank) parts.push(`${blank} 页空白`);
+  const removed = pageModel.length - kept.length;
+  if (removed) parts.push(`已删 ${removed} 页`);
+  pagesSummary.textContent = parts.join(' · ');
+}
+
+async function saveManagedPdf() {
+  if (!pageSrcDoc) { alert('请先选择一个 PDF'); return; }
+  const kept = pageModel.filter((p) => !p.deleted);
+  if (!kept.length) { alert('至少要保留一页'); return; }
+  const btn = document.querySelector('[data-process="pdfpages"]');
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  try {
+    const { PDFDocument } = await loadPdfLib();
+    const out = await PDFDocument.create();
+    const realIdx = kept.filter((p) => p.srcIndex >= 0).map((p) => p.srcIndex);
+    const copied = realIdx.length ? await out.copyPages(pageSrcDoc, realIdx) : [];
+    // copyPages 返回顺序与传入索引一致,按原顺序消费
+    let ci = 0;
+    for (const p of kept) {
+      let page;
+      if (p.srcIndex < 0) {
+        const ref = pageSrcDoc.getPage(0);
+        page = out.addPage([ref.getWidth(), ref.getHeight()]);
+      } else {
+        page = out.addPage(copied[ci++]);
+      }
+      if (p.rotate) {
+        const cur = page.getRotation().angle || 0;
+        page.setRotation({ type: 'degrees', angle: (cur + p.rotate) % 360 });
+      }
+    }
+    btn.textContent = '保存中…';
+    const base = (pageSrcDoc && state.files[0] ? state.files[0].name : 'PDF').replace(/\.pdf$/i, '');
+    savePdf(await out.save(), `${base}_页面整理.pdf`);
+  } catch (e) {
+    alert('保存失败:' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+// ---- PDF 盖章 / 插入图片 ----
+async function pdfStamp() {
+  const src = await openSourcePdf();
+  if (!src) return;
+  const img = stampImageInput.files && stampImageInput.files[0];
+  if (!img) { alert('请选择要插入的图片(公章 / 签名 / 二维码)'); return; }
+  const btn = document.querySelector('[data-process="pdfstamp"]');
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  try {
+    const { doc } = src;
+    const total = doc.getPageCount();
+    const idx = parsePageRange(stampPages.value, total);
+    if (!idx.length) { alert(`页码范围无效,该 PDF 共 ${total} 页`); return; }
+
+    btn.textContent = '读取图片…';
+    const emb = await embedAnyImage(doc, img);
+    if (!emb) { alert('图片读取失败'); return; }
+
+    const pages = doc.getPages();
+    const args = {
+      pos: stampPos.value,
+      widthPct: parseInt(stampScale.value, 10),
+      opacity: parseInt(stampOpacity.value, 10),
+      margin: parseInt(stampMargin.value, 10),
+    };
+    idx.forEach((i) => placeOnPage(pages[i], emb, args));
+
+    btn.textContent = '保存中…';
+    const base = src.file.name.replace(/\.pdf$/i, '');
+    savePdf(await doc.save(), `${base}_盖章.pdf`);
+  } catch (e) {
+    alert('插入图片失败:' + e.message);
   } finally {
     btn.disabled = false;
     btn.textContent = oldText;
@@ -1298,7 +1750,7 @@ function switchTool(view) {
   }
 
   renderFileBar();
-  refreshSplitInfo();
+  refreshPdfPanels();
 }
 
 document.querySelectorAll('.tool-tab').forEach((tab) => {
@@ -1324,6 +1776,46 @@ function updateSplitRangeField() {
   splitRangeField.hidden = splitMode.value !== 'extract';
 }
 splitMode.addEventListener('change', updateSplitRangeField);
+
+// ---- PDF 水印:文字/图片切换只显示相关选项 ----
+function updatePdfwmFields() {
+  const isText = pdfwmType.value === 'text';
+  pdfwmTextField.hidden = !isText;
+  pdfwmImageField.hidden = isText;
+  pdfwmSizeField.hidden = !isText;
+  pdfwmAngleField.hidden = !isText;
+  pdfwmColorField.hidden = !isText;
+}
+pdfwmType.addEventListener('change', updatePdfwmFields);
+
+// ---- 滑块数值实时显示 ----
+const sliderBindings = [
+  [pdfwmSize, pdfwmSizeVal, (v) => v],
+  [pdfwmOpacity, pdfwmOpacityVal, (v) => v + '%'],
+  [pdfwmAngle, pdfwmAngleVal, (v) => v],
+  [pdfwmScale, pdfwmScaleVal, (v) => v + '%'],
+  [pgnumSize, pgnumSizeVal, (v) => v],
+  [stampScale, stampScaleVal, (v) => v + '%'],
+  [stampOpacity, stampOpacityVal, (v) => v + '%'],
+  [stampMargin, stampMarginVal, (v) => v],
+];
+sliderBindings.forEach(([input, label, fmt]) => {
+  const sync = () => { label.textContent = fmt(input.value); };
+  input.addEventListener('input', sync);
+  sync();
+});
+
+// ---- PDF 页面管理按钮 ----
+pagesReset.addEventListener('click', () => {
+  if (!pageSrcDoc) { alert('请先选择一个 PDF'); return; }
+  pageModel = pageSrcDoc.getPageIndices().map((i) => ({ srcIndex: i, rotate: 0, deleted: false }));
+  renderPageGrid();
+});
+pagesInsert.addEventListener('click', () => {
+  if (!pageSrcDoc) { alert('请先选择一个 PDF'); return; }
+  pageModel.push({ srcIndex: -1, rotate: 0, deleted: false });
+  renderPageGrid();
+});
 
 // ============================================================
 // 事件绑定
@@ -1352,7 +1844,7 @@ function handleFiles(fileList) {
 
   state.files = state.files.concat(files);
   renderFileBar();
-  refreshSplitInfo();
+  refreshPdfPanels();
   results.hidden = true;
   clearResults();
 }
@@ -1428,7 +1920,7 @@ function renderFileBar() {
 function removeFile(index) {
   state.files.splice(index, 1);
   renderFileBar();
-  refreshSplitInfo();
+  refreshPdfPanels();
   results.hidden = true;
   clearResults();
 }
@@ -1521,6 +2013,10 @@ async function onProcess(process) {
     case 'tobase64': await tobase64Files(); break;
     case 'pdfmerge': await mergePdfs(); break;
     case 'pdfsplit': await splitPdf(); break;
+    case 'pdfwatermark': await pdfWatermark(); break;
+    case 'pdfpagenum': await pdfPageNum(); break;
+    case 'pdfpages': await saveManagedPdf(); break;
+    case 'pdfstamp': await pdfStamp(); break;
   }
 }
 document.querySelectorAll('[data-process]').forEach((btn) => {
@@ -1674,3 +2170,4 @@ switchTool('compress');
 updateRotateStatus();
 updateCropStatus();
 updateSplitRangeField();
+updatePdfwmFields();

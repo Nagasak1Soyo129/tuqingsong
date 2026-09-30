@@ -154,6 +154,15 @@ body {
   border-color: transparent;
   box-shadow: var(--glow-blue);
 }
+/* 导航分组分隔(图片工具 | PDF 工具) */
+.toolbar-sep {
+  flex: 0 0 auto;
+  width: 1px;
+  align-self: stretch;
+  margin: 4px 6px;
+  background: var(--border);
+}
+
 .tab-tag {
   font-size: 10px;
   background: #fff;
@@ -365,6 +374,130 @@ main {
   border-radius: 20px;
   padding: 2px 7px;
 }
+
+/* 颜色选择器 */
+input[type="color"] {
+  width: 100%;
+  height: 40px;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--panel-2);
+  cursor: pointer;
+  transition: border-color .18s, box-shadow .18s;
+}
+input[type="color"]:hover { border-color: var(--accent); }
+input[type="color"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.14);
+}
+input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+input[type="color"]::-webkit-color-swatch { border: none; border-radius: 7px; }
+
+/* 文件选择框 */
+input[type="file"] {
+  width: 100%;
+  font-size: 13px;
+  color: var(--muted);
+  padding: 9px 11px;
+  border: 1px dashed var(--border);
+  border-radius: 10px;
+  background: var(--panel-2);
+  cursor: pointer;
+  transition: border-color .18s, background .18s;
+}
+input[type="file"]:hover { border-color: var(--accent); background: #fff; }
+input[type="file"]::file-selector-button {
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  margin-right: 10px;
+  cursor: pointer;
+  transition: filter .15s;
+}
+input[type="file"]::file-selector-button:hover { filter: brightness(1.08); }
+input[type="file"]::file-selector-button:active { transform: scale(0.96); }
+
+/* PDF 页面管理 */
+.page-tools { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; }
+.page-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.page-card {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fff;
+  overflow: hidden;
+  transition: border-color .18s, box-shadow .18s, transform .15s;
+}
+.page-card:hover { border-color: var(--accent); box-shadow: var(--shadow-sm); }
+.page-card.del { opacity: 0.4; border-style: dashed; }
+.page-card.del .page-card-body { text-decoration: line-through; }
+.page-card-body {
+  height: 68px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  background: linear-gradient(160deg, #f7faff, #e9f0fc);
+}
+.page-card-num { font-size: 20px; font-weight: 800; color: var(--accent); }
+.page-card-rot { font-size: 10px; color: var(--muted); }
+.page-card-actions {
+  display: flex;
+  border-top: 1px solid var(--border-2);
+}
+.page-card-actions button {
+  flex: 1;
+  border: none;
+  background: #fff;
+  color: var(--muted);
+  font-size: 12px;
+  padding: 6px 0;
+  cursor: pointer;
+  transition: background .18s, color .18s;
+}
+.page-card-actions button:hover { background: rgba(47, 107, 255, 0.08); color: var(--accent); }
+.page-card-actions button:active { background: rgba(47, 107, 255, 0.16); }
+.page-card-actions button + button { border-left: 1px solid var(--border-2); }
+.page-card-actions [data-act="del"]:hover { color: var(--danger); background: rgba(229, 72, 77, 0.08); }
+.page-card-mv {
+  position: absolute;
+  top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  opacity: 0;
+  transition: opacity .18s;
+}
+.page-card-mv.left { left: 4px; }
+.page-card-mv.right { right: 4px; }
+.page-card:hover .page-card-mv { opacity: 1; }
+.page-card-mv button {
+  width: 20px; height: 18px;
+  border: none;
+  border-radius: 5px;
+  background: rgba(15, 23, 42, 0.6);
+  color: #fff;
+  font-size: 8px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .18s, transform .12s;
+}
+.page-card-mv button:hover:not(:disabled) { background: var(--accent); }
+.page-card-mv button:active:not(:disabled) { transform: scale(0.86); }
+.page-card-mv button:disabled { opacity: 0.25; cursor: not-allowed; }
 
 /* PDF 文件缩略图占位 */
 .thumb-doc {
