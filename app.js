@@ -200,11 +200,11 @@ function refreshAuthUI() {
     if (u.admin) accountBtn.textContent = `👑 ${u.username}`;
     else if (u.premium) accountBtn.textContent = `👤 ${u.username} · 支持者`;
     else accountBtn.textContent = `👤 ${u.username}`;
-    upgradeBtn.textContent = u.premium ? '❤ 感谢支持' : '❤ 请支持我们';
+    upgradeBtn.textContent = u.premium ? '感谢支持' : '请支持我们';
     upgradeBtn.style.background = u.premium ? 'linear-gradient(135deg, var(--ok), #2bb673)' : '';
   } else {
     accountBtn.textContent = '登录';
-    upgradeBtn.textContent = '❤ 请支持我们';
+    upgradeBtn.textContent = '请支持我们';
     upgradeBtn.style.background = '';
   }
   adminBtn.hidden = !isAdmin();
@@ -814,7 +814,7 @@ function composeCollage(imgs, layout, gap) {
 }
 
 async function collageFiles() {
-  if (!state.premium) { alert('拼图需要一次处理多张图片。如果图轻松帮到了你,欢迎支持我们解锁 ❤'); upgradeModal.hidden = false; return; }
+  if (!state.premium) { alert('拼图需要一次处理多张图片。如果图轻松帮到了你,欢迎支持我们解锁'); upgradeModal.hidden = false; return; }
   if (state.files.length < 2) { alert('拼图需要至少 2 张图片'); return; }
   const layout = collageLayout.value;
   const gap = parseInt(collageGap.value, 10) || 0;
@@ -914,7 +914,7 @@ async function tobase64Files() {
 
 // ---- PDF 合并 ----
 async function mergePdfs() {
-  if (!state.premium) { alert('PDF 合并需要一次处理多个文件。如果图轻松帮到了你,欢迎支持我们解锁 ❤'); upgradeModal.hidden = false; return; }
+  if (!state.premium) { alert('PDF 合并需要一次处理多个文件。如果图轻松帮到了你,欢迎支持我们解锁'); upgradeModal.hidden = false; return; }
   if (state.files.length < 2) { alert('合并至少需要 2 个 PDF 文件'); return; }
 
   const btn = document.querySelector('[data-process="pdfmerge"]');
@@ -980,7 +980,7 @@ async function splitPdf() {
   if (!state.files.length) { alert('请先选择一个 PDF'); return; }
   const mode = splitMode.value;
   if (mode === 'each' && !state.premium) {
-    alert('「每页拆成单独 PDF」会一次输出很多文件。欢迎支持我们解锁 ❤');
+    alert('「每页拆成单独 PDF」会一次输出很多文件。欢迎支持我们解锁');
     upgradeModal.hidden = false;
     return;
   }
@@ -1836,7 +1836,7 @@ function handleFiles(fileList) {
   }
 
   if (!state.premium && (files.length > 1 || state.files.length + files.length > 1)) {
-    alert('免费版一次处理 1 个文件。批量处理是我们对支持者的一点谢意,欢迎支持我们 ❤');
+    alert('免费版一次处理 1 个文件。批量处理是我们对支持者的一点谢意,欢迎支持我们');
     files.length = 1;
     if (state.files.length >= 1) files.length = 0;
   }
@@ -2119,7 +2119,7 @@ async function startPayment(plan) {
     return;
   }
   if (state.user.premium && !state.user.premiumUntil) {
-    showMsg('你已经是我们的长期支持者了,无需再次支持 ❤', true);
+    showMsg('你已经是我们的长期支持者了,无需再次支持', true);
     return;
   }
   showMsg('正在创建订单…', true);
