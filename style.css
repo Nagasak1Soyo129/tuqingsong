@@ -94,6 +94,8 @@ nav { display: flex; gap: 18px; flex: 1; }
 
 .resize-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .resize-row input[type="number"] { width: 90px; }
+.target-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.target-row input[type="number"] { width: 90px; }
 .resize-row .x { color: var(--muted); }
 .resize-row .lock { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--muted); cursor: pointer; }
 .resize-row .lock input { width: auto; }
@@ -198,6 +200,7 @@ input[type="text"] { width: 180px; }
 /* 结果 */
 .results { margin-top: 32px; }
 .results h2 { font-size: 20px; margin-bottom: 16px; }
+#zipBtn { margin-bottom: 16px; }
 .count { color: var(--muted); font-size: 14px; font-weight: 400; }
 .result-list { display: flex; flex-direction: column; gap: 12px; }
 

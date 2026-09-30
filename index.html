@@ -44,6 +44,11 @@
         <label>压缩质量</label>
         <input type="range" id="quality" min="10" max="100" value="80" />
         <span id="qualityVal" class="val">80%</span>
+        <div class="target-row">
+          <label>目标大小</label>
+          <input type="number" id="targetKB" placeholder="留空用质量" min="1" />
+          <span class="val">KB</span>
+        </div>
       </div>
 
       <div class="control-group" id="group-format">
@@ -109,6 +114,7 @@
     <!-- 结果区 -->
     <section id="results" class="results" hidden>
       <h2>处理结果 <span id="count" class="count"></span></h2>
+      <button id="zipBtn" class="btn-ghost" hidden>⬇ 全部打包下载(ZIP)</button>
       <div id="resultList" class="result-list"></div>
     </section>
 

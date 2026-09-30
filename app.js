@@ -25,9 +25,11 @@ const controls = $('#controls');
 const results = $('#results');
 const resultList = $('#resultList');
 const countEl = $('#count');
+const zipBtn = $('#zipBtn');
 
 const qualityInput = $('#quality');
 const qualityVal = $('#qualityVal');
+const targetKBInput = $('#targetKB');
 const formatSel = $('#format');
 const wmTextInput = $('#wmText');
 const wmPosSel = $('#wmPos');
@@ -379,16 +381,27 @@ function canvasToBlob(canvas, mime, quality) {
   });
 }
 
+// 二分找最接近目标大小的质量(不超 targetBytes、质量越高越好);PNG 无损不支持,调用方自行排除
+async function findQualityForTarget(canvas, mime, targetBytes, maxQ) {
+  let lo = 0.01, hi = maxQ;
+  let best = null;
+  for (let i = 0; i < 8; i++) {
+    const mid = (lo + hi) / 2;
+    const blob = await canvasToBlob(canvas, mime, mid);
+    if (!blob) return null;
+    if (blob.size <= targetBytes) { best = blob; lo = mid; }
+    else { hi = mid; }
+  }
+  if (!best) best = await canvasToBlob(canvas, mime, lo); // 最低质量仍超目标,返回最小结果
+  return best;
+}
+
 async function processOne(file, index) {
   const img = await loadFile(file);
 
   const origSize = file.size;
   const origW = img.naturalWidth;
   const origH = img.naturalHeight;
-
-  // 会员可输出 100% 质量,免费限 80%
-  let quality = parseInt(qualityInput.value, 10) / 100;
-  if (!state.premium) quality = Math.min(quality, 0.8);
 
   // 水印:免费版强制加水印(留空则用站名);会员可留空去除
   let wmText = wmTextInput.value.trim();
@@ -406,7 +419,17 @@ async function processOne(file, index) {
   drawWatermark(cv.getContext('2d'), cv.width, cv.height, wmText);
 
   const mime = formatSel.value;
-  const blob = await canvasToBlob(cv, mime, quality);
+  const targetKB = parseInt(targetKBInput.value, 10) || 0;
+  let blob;
+  if (targetKB > 0 && mime !== 'image/png') {
+    // 目标大小模式:二分逼近,免费版最高 80%;PNG 无损不走此模式
+    const maxQ = state.premium ? 1.0 : 0.8;
+    blob = await findQualityForTarget(cv, mime, targetKB * 1024, maxQ);
+  } else {
+    let quality = parseInt(qualityInput.value, 10) / 100;
+    if (!state.premium) quality = Math.min(quality, 0.8);
+    blob = await canvasToBlob(cv, mime, quality);
+  }
   if (!blob) throw new Error('生成图片失败,可能图片过大');
   const url = URL.createObjectURL(blob);
   const outSize = blob.size;
@@ -449,6 +472,117 @@ async function downloadImage(blob, filename) {
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+}
+
+// ---- ZIP 打包下载(纯 JS store 模式,不引入外部库)----
+const CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let n = 0; n < 256; n++) {
+    let c = n;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+    t[n] = c >>> 0;
+  }
+  return t;
+})();
+
+function crc32(bytes) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < bytes.length; i++) crc = CRC_TABLE[(crc ^ bytes[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+
+function buildZip(entries) {
+  const enc = new TextEncoder();
+  const now = new Date();
+  const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+
+  const parts = [];
+  const central = [];
+  let offset = 0;
+
+  for (const e of entries) {
+    const nameBytes = enc.encode(e.name);
+    const data = e.data;
+    const crc = crc32(data);
+
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true);
+    lh.setUint16(4, 20, true);
+    lh.setUint16(6, 0x0800, true); // UTF-8 文件名
+    lh.setUint16(8, 0, true);      // 存储(不压缩)
+    lh.setUint16(10, dosTime, true);
+    lh.setUint16(12, dosDate, true);
+    lh.setUint32(14, crc, true);
+    lh.setUint32(18, data.length, true);
+    lh.setUint32(22, data.length, true);
+    lh.setUint16(26, nameBytes.length, true);
+    lh.setUint16(28, 0, true);
+    parts.push(lh.buffer, nameBytes, data);
+
+    const cd = new DataView(new ArrayBuffer(46));
+    cd.setUint32(0, 0x02014b50, true);
+    cd.setUint16(4, 20, true);
+    cd.setUint16(6, 20, true);
+    cd.setUint16(8, 0x0800, true);
+    cd.setUint16(10, 0, true);
+    cd.setUint16(12, dosTime, true);
+    cd.setUint16(14, dosDate, true);
+    cd.setUint32(16, crc, true);
+    cd.setUint32(20, data.length, true);
+    cd.setUint32(24, data.length, true);
+    cd.setUint16(28, nameBytes.length, true);
+    cd.setUint16(30, 0, true);
+    cd.setUint16(32, 0, true);
+    cd.setUint16(34, 0, true);
+    cd.setUint16(36, 0, true);
+    cd.setUint32(38, 0, true);
+    cd.setUint32(42, offset, true);
+    central.push(cd.buffer, nameBytes);
+
+    offset += 30 + nameBytes.length + data.length;
+  }
+
+  let centralSize = 0;
+  for (const c of central) centralSize += c.byteLength;
+
+  const eocd = new DataView(new ArrayBuffer(22));
+  eocd.setUint32(0, 0x06054b50, true);
+  eocd.setUint16(4, 0, true);
+  eocd.setUint16(6, 0, true);
+  eocd.setUint16(8, entries.length, true);
+  eocd.setUint16(10, entries.length, true);
+  eocd.setUint32(12, centralSize, true);
+  eocd.setUint32(16, offset, true);
+  eocd.setUint16(20, 0, true);
+
+  return new Blob([...parts, ...central, eocd.buffer], { type: 'application/zip' });
+}
+
+function updateZipBtn() {
+  zipBtn.hidden = processedItems.length < 2;
+}
+
+async function downloadAllZip() {
+  const entries = [];
+  for (const it of processedItems) {
+    entries.push({ name: it.name, data: new Uint8Array(await it.blob.arrayBuffer()) });
+  }
+  const zip = buildZip(entries);
+  const fname = '图轻松_批量处理.zip';
+  if (isIOS && navigator.canShare && navigator.canShare({ files: [new File([zip], fname, { type: 'application/zip' })] })) {
+    try {
+      await navigator.share({ files: [new File([zip], fname, { type: 'application/zip' })], title: fname });
+      return;
+    } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const url = URL.createObjectURL(zip);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = fname;
   document.body.appendChild(a);
   a.click();
   setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
@@ -600,12 +734,18 @@ document.getElementById('rotateReset').addEventListener('click', () => {
 // ============================================================
 // 渲染结果
 // ============================================================
+const processedItems = []; // 已处理结果(供打包下载)
+
+function outNameFor(item) {
+  const base = item.file.name.replace(/\.[^.]+$/, '');
+  return base + '_处理.' + extFromMime(item.mime);
+}
+
 function renderResult(item, index) {
   const div = document.createElement('div');
   div.className = 'result-item';
 
-  const base = item.file.name.replace(/\.[^.]+$/, '');
-  const outName = base + '_处理.' + extFromMime(item.mime);
+  const outName = outNameFor(item);
 
   div.innerHTML = `
     <img src="${item.url}" alt="" />
@@ -633,6 +773,8 @@ function clearResults() {
     if (img.src && img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
   });
   resultList.innerHTML = '';
+  processedItems.length = 0;
+  zipBtn.hidden = true;
 }
 
 async function processAll() {
@@ -644,10 +786,12 @@ async function processAll() {
     try {
       const item = await processOne(state.files[i], i);
       renderResult(item, i);
+      processedItems.push({ name: outNameFor(item), blob: item.blob });
     } catch (err) {
       console.error('处理失败:', state.files[i].name, err);
     }
   }
+  updateZipBtn();
 }
 
 // ============================================================
@@ -687,6 +831,7 @@ qualityInput.addEventListener('input', () => {
   qualityVal.textContent = qualityInput.value + '%';
 });
 processBtn.addEventListener('click', processAll);
+zipBtn.addEventListener('click', downloadAllZip);
 clearBtn.addEventListener('click', () => {
   state.files = [];
   controls.hidden = true;
