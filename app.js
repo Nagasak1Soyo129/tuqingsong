@@ -894,7 +894,8 @@ genBtn.addEventListener('click', generateCodes);
 // 在线支付(虎皮椒):点套餐 → 创建订单 → 跳转扫码 → 回调自动开通会员
 // 支付未配置(XH_APPID/XH_SECRET 为空)时,退回展示微信收款码(手动发码)
 function showQr(plan) {
-  const amount = plan === 'lifetime' ? '¥49 终身买断' : '¥9.9 月度';
+  const amounts = { month: '¥9.9 月度', quarter: '¥16.6 季度', halfyear: '¥24.4 半年', year: '¥36.6 年度' };
+  const amount = amounts[plan] || '¥9.9 月度';
   const qrAmount = document.getElementById('qrAmount');
   const sec = document.getElementById('payQrSection');
   if (qrAmount) qrAmount.textContent = amount;
@@ -916,7 +917,14 @@ function pollOrder(tradeOrderId) {
       const data = await res.json();
       if (data.ok && data.status === 'paid') {
         clearInterval(pollTimer);
-        state.user = { ...state.user, premium: true };
+        try {
+          const me = await fetch('/api/me', { headers: { Authorization: 'Bearer ' + state.token } });
+          const meData = await me.json();
+          if (meData.ok) state.user = meData.user;
+          else state.user = { ...state.user, premium: true };
+        } catch (e) {
+          state.user = { ...state.user, premium: true };
+        }
         refreshAuthUI();
         showMsg('✅ 支付成功,会员已自动开通!', true);
       }
@@ -931,8 +939,8 @@ async function startPayment(plan) {
     loginModal.hidden = false;
     return;
   }
-  if (state.user.premium) {
-    showMsg('你已是会员,无需重复购买', true);
+  if (state.user.premium && !state.user.premiumUntil) {
+    showMsg('你已是终身会员,无需重复购买', true);
     return;
   }
   showMsg('正在创建订单…', true);

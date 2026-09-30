@@ -20,7 +20,7 @@
 | 批量处理 | ❌(限 1 张) | ✅ |
 | 高清输出 | 质量 ≤80% | 质量 100% |
 | 去水印 | ❌(强制水印) | ✅ |
-| 价格 | 免费 | ¥9.9/月 或 ¥49 终身 |
+| 价格 | 免费 | ¥9.9/月 · ¥16.6/季 · ¥24.4/半年 · ¥36.6/年 |
 
 ## 账号与会员系统
 
@@ -32,7 +32,7 @@
 
 - 静态站点:`index.html` + `style.css` + `app.js`
 - 后端:Cloudflare Pages Functions(`functions/api/*`),账号数据存 Cloudflare KV(绑定名 `USERS`)
-- 环境变量:`MASTER_CODE`(主控码)、`VALID_CODES`(有效激活码列表)
+- 环境变量:`MASTER_CODE`(主控码)、`VALID_CODES`(有效激活码列表)、`XH_APPID`/`XH_SECRET`(虎皮椒支付)
 - 部署:GitHub 仓库 → Cloudflare Pages(Git 集成自动部署)
 
 ## 文件结构

@@ -40,20 +40,24 @@ export async function onRequestPost(context) {
   // 幂等:已处理过直接成功返回,避免重复开通
   if (order.status === 'paid') return new Response('success');
 
-  // 校验金额,防篡改
-  if (String(params.total_fee) !== String(order.fee)) return new Response('fail');
+  // 校验金额,防篡改(按数值比较,兼容 9.9 / 9.90 之类格式差异)
+  if (Math.abs(parseFloat(params.total_fee) - parseFloat(order.fee)) > 0.001) return new Response('fail');
 
   order.status = 'paid';
   order.paidAt = Date.now();
   await env.USERS.put('order:' + tradeOrderId, JSON.stringify(order));
 
-  // 自动开通会员
+  // 自动开通/续费会员(终身会员无需处理)
   const rawUser = await env.USERS.get('user:' + order.username);
   if (rawUser) {
     try {
       const user = JSON.parse(rawUser);
-      user.premium = true;
-      await env.USERS.put('user:' + order.username, JSON.stringify(user));
+      if (user.premium !== true) {
+        const days = Number(order.days) || 30;
+        const base = Math.max(Date.now(), Number(user.premiumUntil) || 0);
+        user.premiumUntil = base + days * 86400000;
+        await env.USERS.put('user:' + order.username, JSON.stringify(user));
+      }
     } catch {}
   }
 

@@ -408,7 +408,7 @@ input[type="text"] { width: 180px; }
 .modal-sub { color: var(--muted); margin: 6px 0 20px; }
 .modal-sub strong { color: var(--gold); }
 
-.plans { display: flex; gap: 14px; margin-bottom: 24px; }
+.plans { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px; }
 .plan {
   position: relative;
   flex: 1;
@@ -437,11 +437,8 @@ input[type="text"] { width: 180px; }
   border-radius: 20px;
 }
 .plan-name { font-size: 14px; color: var(--muted); }
-.plan-price { font-size: 30px; font-weight: 800; margin: 8px 0; letter-spacing: -0.5px; }
+.plan-price { font-size: 26px; font-weight: 800; margin: 8px 0 18px; letter-spacing: -0.5px; }
 .plan-price span { font-size: 13px; color: var(--muted); font-weight: 400; }
-.plan ul { list-style: none; text-align: left; font-size: 13px; color: var(--muted); margin-bottom: 16px; }
-.plan li { padding: 4px 0; }
-.plan li::before { content: "✓ "; color: var(--ok); }
 .btn-plan {
   width: 100%;
   padding: 10px;
@@ -525,7 +522,7 @@ footer {
   .result-item img { width: 48px; height: 48px; }
   .btn-download { width: 100%; }
 
-  .plans { flex-direction: column; }
+  .plans { grid-template-columns: 1fr; }
   .modal-box { padding: 24px 18px; }
   .modal-box h2 { font-size: 20px; }
 

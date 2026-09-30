@@ -43,9 +43,19 @@ export async function hashPassword(password, salt) {
   return [...new Uint8Array(bits)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
+// 是否有效会员:终身(premium === true)或订阅未过期(premiumUntil > 现在)
+export function isPremium(u) {
+  return u.premium === true || (u.premiumUntil && u.premiumUntil > Date.now());
+}
+
 // 只暴露给前端的用户字段(绝不返回密码哈希/盐)
 export function publicUser(u) {
-  return { username: u.username, premium: !!u.premium, admin: !!u.admin };
+  return {
+    username: u.username,
+    premium: isPremium(u),
+    premiumUntil: u.premiumUntil || null,
+    admin: !!u.admin,
+  };
 }
 
 export async function createSession(env, username) {
