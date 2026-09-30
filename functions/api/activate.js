@@ -46,7 +46,7 @@ export async function onRequestGet(context) {
     }
   }
 
-  // 把会员/管理员标记写入账号(持久化,跨设备生效)
+  // 把支持者/管理员标记写入账号(持久化,跨设备生效)
   auth.user.premium = true;
   if (admin) auth.user.admin = true;
   await env.USERS.put('user:' + auth.user.username, JSON.stringify(auth.user));

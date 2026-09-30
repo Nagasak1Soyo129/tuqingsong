@@ -1,6 +1,6 @@
 // Cloudflare Pages Function:虎皮椒支付回调(服务器到服务器,无需登录)
 // 路由:POST /api/pay/notify(下单时作为 notify_url 传入)
-// 流程:验签 → 校验金额 → 幂等去重 → 标记订单已支付 → 自动开通会员
+// 流程:验签 → 校验金额 → 幂等去重 → 标记订单已支付 → 自动解锁支持权益
 // 成功时返回字符串 "success"
 
 import { sign } from '../../_lib/xunhu';
@@ -47,7 +47,7 @@ export async function onRequestPost(context) {
   order.paidAt = Date.now();
   await env.USERS.put('order:' + tradeOrderId, JSON.stringify(order));
 
-  // 自动开通/续费会员(终身会员无需处理)
+  // 自动开通/续期支持权益(长期支持者无需处理)
   const rawUser = await env.USERS.get('user:' + order.username);
   if (rawUser) {
     try {

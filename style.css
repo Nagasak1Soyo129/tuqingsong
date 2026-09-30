@@ -542,7 +542,7 @@ input[type="file"]::file-selector-button:active { transform: scale(0.96); }
 .thumb-mv:active:not(:disabled) { transform: scale(0.88); }
 .thumb-mv:disabled { opacity: 0.3; cursor: not-allowed; }
 
-/* 下拉项里的会员标记 */
+/* 下拉项里的支持者标记 */
 .opt-tag { color: var(--gold); font-size: 12px; margin-left: 4px; }
 
 /* 图片预览弹窗 */
@@ -815,7 +815,7 @@ select:focus, input[type="text"]:focus, input[type="password"]:focus, input[type
 }
 .plan.hot:hover { box-shadow: 0 12px 28px rgba(47, 107, 255, 0.4); }
 .plan.hot::before {
-  content: "推荐";
+  content: "最受欢迎";
   position: absolute;
   top: -12px; right: 14px;
   background: #fff;
@@ -847,6 +847,19 @@ select:focus, input[type="text"]:focus, input[type="password"]:focus, input[type
 .btn-plan:active { transform: scale(0.97); }
 .plan.hot .btn-plan { background: #fff; color: var(--accent); border: none; }
 .plan.hot .btn-plan:hover { background: #f0f5ff; }
+
+/* 支持说明(弱化商业感:先讲谢意,再列权益) */
+.support-note {
+  margin: -6px 0 22px;
+  padding: 13px 16px;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--muted);
+  background: linear-gradient(135deg, rgba(47, 107, 255, 0.06), rgba(0, 180, 216, 0.06));
+  border: 1px solid rgba(47, 107, 255, 0.16);
+  border-radius: 12px;
+}
+.support-note b { color: var(--accent); }
 
 .pay-info { border-top: 1px solid var(--border); padding-top: 18px; font-size: 13px; color: var(--muted); }
 .pay-info input {

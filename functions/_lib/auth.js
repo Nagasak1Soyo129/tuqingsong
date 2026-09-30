@@ -48,7 +48,7 @@ export async function hashPassword(password, salt) {
   return [...new Uint8Array(bits)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-// 是否有效会员:终身(premium === true)或订阅未过期(premiumUntil > 现在)
+// 是否有效支持者:长期(premium === true)或支持期未过(premiumUntil > 现在)
 export function isPremium(u) {
   return u.premium === true || (u.premiumUntil && u.premiumUntil > Date.now());
 }

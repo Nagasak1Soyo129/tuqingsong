@@ -2,8 +2,8 @@
 // 图轻松 —— 图片工具箱:压缩 / 转格式 / 加水印 / 调整尺寸 / 旋转 / 裁剪 / 调色 / 拼图 / 转PDF / 转Base64
 // 纯前端处理,图片不出浏览器,无服务器成本
 // 变现:免费版 = 单张 + 质量上限 80% + 拼图锁定
-//       会员  = 批量 + 高清(质量 100%)+ 拼图
-// 会员绑定账号(注册/登录),激活码激活后跨设备生效
+//       支持者 = 批量 + 高清(质量 100%)+ 拼图
+// 支持状态绑定账号(注册/登录),感谢码激活后跨设备生效
 // ============================================================
 
 const state = {
@@ -182,7 +182,7 @@ const codeList = $('#codeList');
 const adminMsgEl = $('#adminMsg');
 
 // ============================================================
-// 账号系统(注册/登录,后端校验,会员状态存服务器)
+// 账号系统(注册/登录,后端校验,支持状态存服务器)
 // ============================================================
 const TOKEN_KEY = 'tqs_token';
 let authMode = 'login'; // 'login' | 'register'
@@ -198,13 +198,13 @@ function refreshAuthUI() {
   const u = state.user;
   if (u) {
     if (u.admin) accountBtn.textContent = `👑 ${u.username}`;
-    else if (u.premium) accountBtn.textContent = `👤 ${u.username} · 会员`;
+    else if (u.premium) accountBtn.textContent = `👤 ${u.username} · 支持者`;
     else accountBtn.textContent = `👤 ${u.username}`;
-    upgradeBtn.textContent = u.premium ? '👑 已开通会员' : '⭐ 升级会员';
+    upgradeBtn.textContent = u.premium ? '❤ 感谢支持' : '❤ 请支持我们';
     upgradeBtn.style.background = u.premium ? 'linear-gradient(135deg, var(--ok), #2bb673)' : '';
   } else {
     accountBtn.textContent = '登录';
-    upgradeBtn.textContent = '⭐ 升级会员';
+    upgradeBtn.textContent = '❤ 请支持我们';
     upgradeBtn.style.background = '';
   }
   adminBtn.hidden = !isAdmin();
@@ -276,7 +276,7 @@ async function logout() {
   refreshAuthUI();
 }
 
-// 激活码:需登录,激活后写入账号(会员跨设备)
+// 感谢码:需登录,激活后写入账号(支持状态跨设备)
 async function activateCode() {
   if (!state.user) {
     showMsg('请先登录账号', false);
@@ -294,7 +294,7 @@ async function activateCode() {
     const data = await res.json();
     if (data.ok) {
       if (data.user) state.user = data.user;
-      showMsg(data.admin ? '👑 主控激活成功(管理员模式)' : '✅ 激活成功,会员已生效!', true);
+      showMsg(data.admin ? '👑 主控激活成功(管理员模式)' : '✅ 激活成功,感谢你的支持!', true);
       refreshAuthUI();
     } else {
       showMsg('❌ ' + (data.msg || '激活码无效'), false);
@@ -570,7 +570,7 @@ function outMime(file) {
   return (t === 'image/png' || t === 'image/jpeg' || t === 'image/webp') ? t : 'image/jpeg';
 }
 
-// 免费版质量上限;会员 100%
+// 免费版质量上限;支持者 100%
 function qualityCap() {
   return state.premium ? 1 : 0.8;
 }
@@ -784,7 +784,7 @@ async function adjustOne(file) {
   return blob;
 }
 
-// ---- 拼图(会员)----
+// ---- 拼图(支持者)----
 function composeCollage(imgs, layout, gap) {
   const n = imgs.length;
   let cols, rows;
@@ -814,7 +814,7 @@ function composeCollage(imgs, layout, gap) {
 }
 
 async function collageFiles() {
-  if (!state.premium) { alert('拼图是会员进阶功能,升级会员即可批量拼图 ⭐'); upgradeModal.hidden = false; return; }
+  if (!state.premium) { alert('拼图需要一次处理多张图片。如果图轻松帮到了你,欢迎支持我们解锁 ❤'); upgradeModal.hidden = false; return; }
   if (state.files.length < 2) { alert('拼图需要至少 2 张图片'); return; }
   const layout = collageLayout.value;
   const gap = parseInt(collageGap.value, 10) || 0;
@@ -914,7 +914,7 @@ async function tobase64Files() {
 
 // ---- PDF 合并 ----
 async function mergePdfs() {
-  if (!state.premium) { alert('PDF 合并是会员功能,升级会员即可批量合并 ⭐'); upgradeModal.hidden = false; return; }
+  if (!state.premium) { alert('PDF 合并需要一次处理多个文件。如果图轻松帮到了你,欢迎支持我们解锁 ❤'); upgradeModal.hidden = false; return; }
   if (state.files.length < 2) { alert('合并至少需要 2 个 PDF 文件'); return; }
 
   const btn = document.querySelector('[data-process="pdfmerge"]');
@@ -980,7 +980,7 @@ async function splitPdf() {
   if (!state.files.length) { alert('请先选择一个 PDF'); return; }
   const mode = splitMode.value;
   if (mode === 'each' && !state.premium) {
-    alert('「每页拆成单独 PDF」是会员功能,升级会员解锁 ⭐');
+    alert('「每页拆成单独 PDF」会一次输出很多文件。欢迎支持我们解锁 ❤');
     upgradeModal.hidden = false;
     return;
   }
@@ -1741,7 +1741,7 @@ function switchTool(view) {
     fileInput.accept = '.pdf,application/pdf';
     dropIcon.textContent = '📄';
     dropText.innerHTML = '拖拽 PDF 到这里,或 <span class="link">点击选择</span>';
-    dropHint.textContent = view === 'pdfmerge' ? '可多选,按选择顺序合并(会员)' : '支持单个 PDF 文件';
+    dropHint.textContent = view === 'pdfmerge' ? '可多选,按选择顺序合并(需支持)' : '支持单个 PDF 文件';
   } else {
     fileInput.accept = 'image/*';
     dropIcon.textContent = '📁';
@@ -1762,7 +1762,7 @@ function updateCollageLock() {
 }
 collageUpgrade.addEventListener('click', () => { upgradeModal.hidden = false; });
 
-// PDF 工具的会员门控提示
+// PDF 工具的门控提示
 function updateProcessLocks() {
   if (!pdfmergeLock) return;
   pdfmergeLock.hidden = state.premium;
@@ -1836,7 +1836,7 @@ function handleFiles(fileList) {
   }
 
   if (!state.premium && (files.length > 1 || state.files.length + files.length > 1)) {
-    alert('免费版一次只能处理 1 个文件,升级会员可批量处理 ⭐');
+    alert('免费版一次处理 1 个文件。批量处理是我们对支持者的一点谢意,欢迎支持我们 ❤');
     files.length = 1;
     if (state.files.length >= 1) files.length = 0;
   }
@@ -2023,7 +2023,7 @@ document.querySelectorAll('[data-process]').forEach((btn) => {
   btn.addEventListener('click', () => onProcess(btn.dataset.process));
 });
 
-// 会员弹窗
+// 支持我们 弹窗
 upgradeBtn.addEventListener('click', () => { upgradeModal.hidden = false; });
 closeModal.addEventListener('click', () => { upgradeModal.hidden = true; });
 upgradeModal.addEventListener('click', (e) => {
@@ -2069,7 +2069,7 @@ adminModal.addEventListener('click', (e) => { if (e.target === adminModal) admin
 genBtn.addEventListener('click', generateCodes);
 
 // ============================================================
-// 在线支付(虎皮椒):点套餐 → 创建订单 → 跳转扫码 → 回调自动开通会员
+// 在线支付(虎皮椒):点支持档位 → 创建订单 → 跳转扫码 → 回调自动解锁
 // 支付未配置(XH_APPID/XH_SECRET 为空)时,退回展示微信收款码(手动发码)
 // ============================================================
 function showQr(plan) {
@@ -2105,7 +2105,7 @@ function pollOrder(tradeOrderId) {
           state.user = { ...state.user, premium: true };
         }
         refreshAuthUI();
-        showMsg('✅ 支付成功,会员已自动开通!', true);
+        showMsg('✅ 支付成功,感谢你的支持!', true);
       }
     } catch (e) {}
   }, 2000);
@@ -2119,7 +2119,7 @@ async function startPayment(plan) {
     return;
   }
   if (state.user.premium && !state.user.premiumUntil) {
-    showMsg('你已是终身会员,无需重复购买', true);
+    showMsg('你已经是我们的长期支持者了,无需再次支持 ❤', true);
     return;
   }
   showMsg('正在创建订单…', true);
@@ -2132,7 +2132,7 @@ async function startPayment(plan) {
     const data = await res.json();
     if (data.ok && data.url) {
       window.open(data.url, '_blank');
-      showMsg('已打开支付页,付完款会自动开通会员(此页别关)…', true);
+      showMsg('已打开支付页,支持完成后会自动解锁(此页别关)…', true);
       pollOrder(data.tradeOrderId);
     } else {
       showMsg('');

@@ -14,7 +14,7 @@
     <div class="brand">图轻松</div>
     <button id="accountBtn" class="btn-account">登录</button>
     <button id="adminBtn" class="btn-account" hidden>🔑 发码后台</button>
-    <button id="upgradeBtn" class="btn-upgrade">⭐ 升级会员</button>
+    <button id="upgradeBtn" class="btn-upgrade">❤ 请支持我们</button>
   </header>
 
   <!-- 工具导航:每个工具一个独立界面 -->
@@ -26,11 +26,11 @@
     <button class="tool-tab" data-view="rotate">旋转</button>
     <button class="tool-tab" data-view="crop">裁剪</button>
     <button class="tool-tab" data-view="adjust">调色</button>
-    <button class="tool-tab" data-view="collage">拼图<span class="tab-tag">会员</span></button>
+    <button class="tool-tab" data-view="collage">拼图<span class="tab-tag">❤</span></button>
     <button class="tool-tab" data-view="topdf">转PDF</button>
     <button class="tool-tab" data-view="tobase64">转Base64</button>
     <span class="toolbar-sep" aria-hidden="true"></span>
-    <button class="tool-tab" data-view="pdfmerge">PDF合并<span class="tab-tag">会员</span></button>
+    <button class="tool-tab" data-view="pdfmerge">PDF合并<span class="tab-tag">❤</span></button>
     <button class="tool-tab" data-view="pdfsplit">PDF拆分</button>
     <button class="tool-tab" data-view="pdfwatermark">PDF水印</button>
     <button class="tool-tab" data-view="pdfpagenum">PDF页码</button>
@@ -206,9 +206,9 @@
       <button class="btn-primary" data-process="adjust">开始调色</button>
     </section>
 
-    <!-- ============ 拼图(会员) ============ -->
+    <!-- ============ 拼图(支持者) ============ -->
     <section class="tool-panel" data-panel="collage" hidden>
-      <div class="tp-head"><h2>拼图 <span class="badge">⭐ 会员</span></h2><p>多张图拼成一张(横向 / 纵向 / 网格 / 九宫格)</p></div>
+      <div class="tp-head"><h2>拼图 <span class="badge">❤ 支持者</span></h2><p>多张图拼成一张(横向 / 纵向 / 网格 / 九宫格)</p></div>
       <div class="tp-grid">
         <div class="tp-field">
           <label>排版</label>
@@ -225,7 +225,7 @@
         </div>
       </div>
       <button class="btn-primary" data-process="collage">开始拼图</button>
-      <p class="tp-lock" id="collageLock" hidden>🔒 拼图需要 2 张以上图片,<a class="link-upgrade" id="collageUpgrade">升级会员解锁批量</a></p>
+      <p class="tp-lock" id="collageLock" hidden>🔒 拼图需要 2 张以上图片,<a class="link-upgrade" id="collageUpgrade">支持我们即可解锁</a></p>
     </section>
 
     <!-- ============ 转 PDF ============ -->
@@ -248,9 +248,9 @@
       </div>
     </section>
 
-    <!-- ============ PDF 合并(会员) ============ -->
+    <!-- ============ PDF 合并(支持者) ============ -->
     <section class="tool-panel" data-panel="pdfmerge" hidden>
-      <div class="tp-head"><h2>PDF 合并 <span class="badge">⭐ 会员</span></h2><p>多个 PDF 按顺序合成一个,可在下方列表调整页序</p></div>
+      <div class="tp-head"><h2>PDF 合并 <span class="badge">❤ 支持者</span></h2><p>多个 PDF 按顺序合成一个,可在下方列表调整页序</p></div>
       <div class="tp-grid">
         <div class="tp-field">
           <label>输出文件名</label>
@@ -258,7 +258,7 @@
         </div>
       </div>
       <button class="btn-primary" data-process="pdfmerge">开始合并</button>
-      <p class="tp-lock" id="pdfmergeLock" hidden>🔒 合并需要 2 个以上 PDF,<a class="link-upgrade" id="pdfmergeUpgrade">升级会员解锁批量</a></p>
+      <p class="tp-lock" id="pdfmergeLock" hidden>🔒 合并需要 2 个以上 PDF,<a class="link-upgrade" id="pdfmergeUpgrade">支持我们即可解锁</a></p>
     </section>
 
     <!-- ============ PDF 拆分 ============ -->
@@ -269,7 +269,7 @@
           <label>拆分方式</label>
           <select id="splitMode">
             <option value="extract">提取指定页(合成一个 PDF)</option>
-            <option value="each">每页拆成单独 PDF<span class="opt-tag">会员</span></option>
+            <option value="each">每页拆成单独 PDF<span class="opt-tag">❤</span></option>
           </select>
         </div>
         <div class="tp-field" id="splitRangeField">
@@ -278,7 +278,7 @@
         </div>
       </div>
       <button class="btn-primary" data-process="pdfsplit">开始拆分</button>
-      <p class="tp-lock" id="pdfsplitLock" hidden>🔒 「每页拆成单独 PDF」会输出多个文件,<a class="link-upgrade" id="pdfsplitUpgrade">升级会员解锁</a></p>
+      <p class="tp-lock" id="pdfsplitLock" hidden>🔒 「每页拆成单独 PDF」会输出多个文件,<a class="link-upgrade" id="pdfsplitUpgrade">支持我们即可解锁</a></p>
     </section>
 
     <!-- ============ PDF 水印 ============ -->
@@ -447,47 +447,49 @@
     <p>图轻松 · 图片处理不经过服务器,全部在本地浏览器完成</p>
   </footer>
 
-  <!-- 升级弹窗 -->
+  <!-- 支持我们 -->
   <div id="upgradeModal" class="modal" hidden>
     <div class="modal-box">
       <button class="modal-close" id="closeModal">×</button>
-      <h2>升级会员</h2>
-      <p class="modal-sub">解锁 <strong>批量处理 · 高清输出 · 拼图</strong></p>
+      <h2>请支持我们</h2>
+      <p class="modal-sub">图轻松一直<strong>免费、无广告、图片不上传服务器</strong>。如果它帮到了你,欢迎请我们喝杯咖啡。</p>
 
       <div class="plans">
         <div class="plan">
-          <div class="plan-name">月度会员</div>
+          <div class="plan-name">支持一个月</div>
           <div class="plan-price">¥9.9<span>/月</span></div>
-          <button class="btn-plan" data-plan="month">选择</button>
+          <button class="btn-plan" data-plan="month">支持</button>
         </div>
         <div class="plan">
-          <div class="plan-name">季度会员</div>
+          <div class="plan-name">支持三个月</div>
           <div class="plan-price">¥16.6<span>/季</span></div>
-          <button class="btn-plan" data-plan="quarter">选择</button>
+          <button class="btn-plan" data-plan="quarter">支持</button>
         </div>
         <div class="plan">
-          <div class="plan-name">半年会员</div>
+          <div class="plan-name">支持半年</div>
           <div class="plan-price">¥24.4<span>/半年</span></div>
-          <button class="btn-plan" data-plan="halfyear">选择</button>
+          <button class="btn-plan" data-plan="halfyear">支持</button>
         </div>
         <div class="plan hot">
-          <div class="plan-name">年度会员</div>
+          <div class="plan-name">支持一年</div>
           <div class="plan-price">¥36.6<span>/年</span></div>
-          <button class="btn-plan" data-plan="year">选择</button>
+          <button class="btn-plan" data-plan="year">支持</button>
         </div>
       </div>
 
+      <p class="support-note">支持后,以下功能会一并解锁 —— 算是我们的一点谢意:<br /><b>批量处理 · 高清原画质输出 · 拼图 · PDF 合并</b></p>
+
       <div class="pay-qr-section" id="payQrSection" hidden>
-        <p class="qr-title">扫码支付,领取激活码</p>
+        <p class="qr-title">扫码支持,领取感谢码</p>
         <img src="pay-qr.jpg" alt="收款码" class="qr-img" />
-        <p class="qr-amount" id="qrAmount">会员套餐</p>
-        <p class="qr-tip">付款后,把<b>付款截图</b>发给客服,领取激活码</p>
+        <p class="qr-amount" id="qrAmount">支持金额</p>
+        <p class="qr-tip">支持后,把<b>付款截图</b>发给我们,领取感谢码</p>
         <p class="qr-contact">客服微信:<b>yellowsoy0</b></p>
       </div>
 
       <div class="pay-info">
-        <p>付款成功后,把平台发你的激活码粘贴到下方解锁</p>
-        <input type="text" id="codeInput" placeholder="输入激活码解锁" />
+        <p>已经支持过了?把收到的<b>感谢码</b>粘贴到下面即可</p>
+        <input type="text" id="codeInput" placeholder="输入感谢码" />
         <button id="activateBtn" class="btn-primary">激活</button>
         <p id="activateMsg" class="activate-msg"></p>
       </div>
@@ -499,7 +501,7 @@
     <div class="modal-box">
       <button class="modal-close" id="closeLogin">×</button>
       <h2 id="loginTitle">登录</h2>
-      <p class="modal-sub">登录后会员权益跨设备同步,激活码绑定账号</p>
+      <p class="modal-sub">登录后支持权益跨设备同步,感谢码绑定账号</p>
       <div class="auth-tabs">
         <button id="tabLogin" class="auth-tab active">登录</button>
         <button id="tabRegister" class="auth-tab">注册</button>
@@ -546,11 +548,11 @@
     <div class="modal-box">
       <button class="modal-close" id="closeAdmin">×</button>
       <h2>发码后台</h2>
-      <p class="modal-sub">生成激活码发给付款客户,一码一用,激活后作废</p>
+      <p class="modal-sub">生成感谢码发给支持者,一码一用,用过作废</p>
       <div class="admin-gen">
         <input type="number" id="genCount" value="1" min="1" max="50" />
-        <input type="text" id="genNote" placeholder="备注(如:张三 年度会员)" />
-        <button id="genBtn" class="btn-primary">生成激活码</button>
+        <input type="text" id="genNote" placeholder="备注(如:张三 支持一年)" />
+        <button id="genBtn" class="btn-primary">生成感谢码</button>
       </div>
       <div id="genResult" class="gen-result"></div>
       <div id="codeList" class="code-list"></div>

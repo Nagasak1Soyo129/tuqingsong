@@ -9,11 +9,12 @@
 import { json, getUserByToken, randomHex } from '../../_lib/auth';
 import { sign, nonceStr } from '../../_lib/xunhu';
 
+// title 会显示在支付平台的账单上,刻意用「支持」的说法,弱化商业感
 const PLANS = {
-  month:    { title: '图轻松 月度会员', fee: '9.90',  days: 30 },
-  quarter:  { title: '图轻松 季度会员', fee: '16.60', days: 90 },
-  halfyear: { title: '图轻松 半年会员', fee: '24.40', days: 180 },
-  year:     { title: '图轻松 年度会员', fee: '36.60', days: 365 },
+  month:    { title: '图轻松 支持1个月', fee: '9.90',  days: 30 },
+  quarter:  { title: '图轻松 支持3个月', fee: '16.60', days: 90 },
+  halfyear: { title: '图轻松 支持6个月', fee: '24.40', days: 180 },
+  year:     { title: '图轻松 支持1年',   fee: '36.60', days: 365 },
 };
 
 export async function onRequestPost(context) {
@@ -21,7 +22,7 @@ export async function onRequestPost(context) {
 
   const auth = await getUserByToken(env, request);
   if (!auth) return json({ ok: false, msg: '请先登录' }, 401);
-  if (auth.user.premium === true) return json({ ok: false, msg: '你已是终身会员,无需重复购买' }, 400);
+  if (auth.user.premium === true) return json({ ok: false, msg: '你已经是我们的长期支持者了,无需再次支持' }, 400);
 
   let body = {};
   try { body = await request.json(); } catch {}
