@@ -1151,7 +1151,7 @@ async function onProcess(process) {
     case 'compress': await processFiles(compressOne); break;
     case 'convert': await processFiles(convertOne); break;
     case 'watermark':
-      if (!wmText.value.trim()) { alert('请输入水印文字(留空则不加)'); return; }
+      if (!wmText.value.trim()) { alert('请先输入要添加的水印文字'); return; }
       await processFiles(watermarkOne); break;
     case 'resize':
       if (!resizeW.value && !resizeH.value) { alert('请输入目标宽度或高度'); return; }
