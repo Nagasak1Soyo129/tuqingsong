@@ -15,6 +15,8 @@
 - ✅ 图片转 Base64(生成 Data URL)
 - ✅ 拼图(横向 / 纵向 / 网格 / 九宫格,会员)
 - ✅ 已选图片预览(缩略图 · 单张移除 · 点击看大图)
+- ✅ PDF 合并(多个 PDF 合成一个,可调顺序,会员)
+- ✅ PDF 拆分 / 提取页(按页拆成单独 PDF 打包 ZIP,或提取指定页)
 - ✅ 图片本地处理,隐私安全
 
 ## 免费 vs 会员
@@ -26,6 +28,8 @@
 | 高清输出 | 质量 ≤80% | 质量 100% |
 | 拼图 | ❌ | ✅ |
 | 转 PDF | 单张 | 多张 |
+| PDF 合并 | ❌ | ✅ |
+| PDF 拆分 / 提取页 | ✅ | ✅(含每页拆成单独文件) |
 | 价格 | 免费 | ¥9.9/月 · ¥16.6/季 · ¥24.4/半年 · ¥36.6/年 |
 
 > 不再给免费用户强制打水印 —— 水印完全可选,变现靠「批量 + 高清 + 拼图」等进阶功能。
@@ -43,15 +47,18 @@
 - 后端:Cloudflare Pages Functions(`functions/api/*`),账号数据存 Cloudflare KV(绑定名 `USERS`)
 - 环境变量:`MASTER_CODE`(主控码)、`VALID_CODES`(有效激活码列表)、`XH_APPID`/`XH_SECRET`(虎皮椒支付)
 - 部署:GitHub 仓库 → Cloudflare Pages(Git 集成自动部署)
+- PDF 处理:引入 [pdf-lib](https://github.com/Hopding/pdf-lib)(MIT)做合并/拆分,**自托管在 `vendor/`**(不走 CDN,避免国内 CDN 被墙导致功能失效),只在用到 PDF 工具时懒加载,不影响首屏速度
 
 ## 文件结构
 
 ```
 image-tools/
-├── index.html           页面结构(10 个工具独立界面)
+├── index.html           页面结构(12 个工具独立界面)
 ├── style.css            样式(浅色蓝白主题)
 ├── app.js               前端逻辑(工具处理 + 账号 + 支付)
 ├── pay-qr.jpg           收款二维码
+├── vendor/
+│   └── pdf-lib.min.js   PDF 合并/拆分库(MIT,自托管,懒加载)
 ├── functions/
 │   ├── _lib/auth.js     账号公共工具(哈希 / 会话)
 │   └── api/             register / login / me / logout / activate / admin / pay

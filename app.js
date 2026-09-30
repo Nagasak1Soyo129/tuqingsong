@@ -30,6 +30,9 @@ function esc(s) {
 }
 const dropZone = $('#dropZone');
 const fileInput = $('#fileInput');
+const dropIcon = $('#dropIcon');
+const dropText = $('#dropText');
+const dropHint = $('#dropHint');
 const fileBar = $('#fileBar');
 const fileCount = $('#fileCount');
 const thumbList = $('#thumbList');
@@ -81,6 +84,16 @@ const collageLayout = $('#collageLayout');
 const collageGap = $('#collageGap');
 const collageLock = $('#collageLock');
 const collageUpgrade = $('#collageUpgrade');
+// PDF 合并 / 拆分
+const mergeName = $('#mergeName');
+const pdfmergeLock = $('#pdfmergeLock');
+const pdfmergeUpgrade = $('#pdfmergeUpgrade');
+const splitInfo = $('#splitInfo');
+const splitMode = $('#splitMode');
+const splitRange = $('#splitRange');
+const splitRangeField = $('#splitRangeField');
+const pdfsplitLock = $('#pdfsplitLock');
+const pdfsplitUpgrade = $('#pdfsplitUpgrade');
 // Base64
 const b64Result = $('#b64Result');
 const b64Text = $('#b64Text');
@@ -319,6 +332,63 @@ async function generateCodes() {
   } finally {
     genBtn.disabled = false;
   }
+}
+
+// ============================================================
+// PDF 支持(pdf-lib 自托管在 /vendor/,按需懒加载,不拖慢主页面)
+// ============================================================
+const PDF_TOOLS = ['pdfmerge', 'pdfsplit'];
+
+function isPdfTool(view) { return PDF_TOOLS.includes(view); }
+
+function isPdfFile(f) {
+  return f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '');
+}
+
+let pdfLibPromise = null;
+function loadPdfLib() {
+  if (window.PDFLib) return Promise.resolve(window.PDFLib);
+  if (!pdfLibPromise) {
+    pdfLibPromise = new Promise((resolve, reject) => {
+      const s = document.createElement('script');
+      s.src = 'vendor/pdf-lib.min.js';
+      s.onload = () => (window.PDFLib ? resolve(window.PDFLib) : reject(new Error('PDF 库加载失败')));
+      s.onerror = () => { pdfLibPromise = null; reject(new Error('PDF 库加载失败,请检查网络')); };
+      document.head.appendChild(s);
+    });
+  }
+  return pdfLibPromise;
+}
+
+// 读 PDF 页数(顺带校验文件是否为有效 PDF)
+async function pdfPageCount(file) {
+  const { PDFDocument } = await loadPdfLib();
+  const doc = await PDFDocument.load(await file.arrayBuffer());
+  return doc.getPageCount();
+}
+
+// 把 "1-3,5,8" 解析成页码数组(0 基);留空表示全部
+// 容忍中文顿号/全角逗号/全角波浪号,以及 "2 - 4" 这种区间内带空格的写法
+function parsePageRange(str, total) {
+  let s = String(str || '').trim();
+  if (!s) return Array.from({ length: total }, (_, i) => i);
+  // 先把区间符两侧的空格收紧,否则 "2 - 4" 会被空格拆成三段
+  s = s.replace(/\s*([-~～—])\s*/g, '$1');
+  const out = [];
+  for (const part of s.split(/[,、,;\s]+/)) {
+    if (!part) continue;
+    const m = part.match(/^(\d+)[-~～—](\d+)$/);
+    if (m) {
+      let a = parseInt(m[1], 10), b = parseInt(m[2], 10);
+      if (a > b) [a, b] = [b, a];
+      for (let i = a; i <= b; i++) if (i >= 1 && i <= total) out.push(i - 1);
+    } else if (/^\d+$/.test(part)) {
+      const n = parseInt(part, 10);
+      if (n >= 1 && n <= total) out.push(n - 1);
+    }
+  }
+  // 去重且保序
+  return [...new Set(out)];
 }
 
 // ============================================================
@@ -695,6 +765,110 @@ async function tobase64Files() {
   b64Text.value = list.join('\n');
   b64Len.textContent = list.reduce((a, s) => a + s.length, 0).toLocaleString() + ' 字符';
   b64Result.hidden = false;
+}
+
+// ---- PDF 合并 ----
+async function mergePdfs() {
+  if (!state.premium) { alert('PDF 合并是会员功能,升级会员即可批量合并 ⭐'); upgradeModal.hidden = false; return; }
+  if (state.files.length < 2) { alert('合并至少需要 2 个 PDF 文件'); return; }
+
+  const btn = document.querySelector('[data-process="pdfmerge"]');
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  try {
+    const { PDFDocument } = await loadPdfLib();
+    const out = await PDFDocument.create();
+    let total = 0;
+    for (let i = 0; i < state.files.length; i++) {
+      const f = state.files[i];
+      btn.textContent = `合并中… (${i + 1}/${state.files.length})`;
+      try {
+        const src = await PDFDocument.load(await f.arrayBuffer());
+        const pages = await out.copyPages(src, src.getPageIndices());
+        pages.forEach((p) => out.addPage(p));
+        total += pages.length;
+      } catch (e) {
+        // 加密或损坏的 PDF:跳过并告知,不静默产出残缺文件
+        alert(`跳过「${f.name}」:无法读取(可能已加密或有密码保护)`);
+      }
+    }
+    if (!total) { alert('没有可合并的 PDF 页面'); return; }
+    const bytes = await out.save();
+    const name = (mergeName.value.trim() || '图轻松_合并') + '.pdf';
+    downloadImage(new Blob([bytes], { type: 'application/pdf' }), name);
+  } catch (e) {
+    alert('合并失败:' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+}
+
+// ---- PDF 拆分 ----
+async function refreshSplitInfo() {
+  if (state.view !== 'pdfsplit') return;
+  const f = state.files[0];
+  if (!f) { splitInfo.textContent = '选择一个 PDF 后显示页数'; return; }
+  splitInfo.textContent = '正在读取页数…';
+  try {
+    const n = await pdfPageCount(f);
+    // 期间可能已换文件,避免写入过期结果
+    if (state.files[0] !== f) return;
+    splitInfo.textContent = `《${f.name}》共 ${n} 页`;
+  } catch (e) {
+    if (state.files[0] !== f) return;
+    splitInfo.textContent = '⚠ 无法读取该 PDF(可能已加密或损坏)';
+  }
+}
+
+async function splitPdf() {
+  if (!state.files.length) { alert('请先选择一个 PDF'); return; }
+  const mode = splitMode.value;
+  if (mode === 'each' && !state.premium) {
+    alert('「每页拆成单独 PDF」是会员功能,升级会员解锁 ⭐');
+    upgradeModal.hidden = false;
+    return;
+  }
+  const btn = document.querySelector('[data-process="pdfsplit"]');
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  try {
+    const { PDFDocument } = await loadPdfLib();
+    const f = state.files[0];
+    btn.textContent = '读取中…';
+    const src = await PDFDocument.load(await f.arrayBuffer());
+    const total = src.getPageCount();
+    const base = f.name.replace(/\.pdf$/i, '');
+
+    if (mode === 'extract') {
+      const idx = parsePageRange(splitRange.value, total);
+      if (!idx.length) { alert(`页码范围无效,该 PDF 共 ${total} 页`); return; }
+      btn.textContent = '提取中…';
+      const out = await PDFDocument.create();
+      (await out.copyPages(src, idx)).forEach((p) => out.addPage(p));
+      const bytes = await out.save();
+      const label = splitRange.value.trim() ? '提取' : '全页';
+      downloadImage(new Blob([bytes], { type: 'application/pdf' }), `${base}_${label}.pdf`);
+    } else {
+      // 每页一个 PDF,打包成 ZIP
+      const entries = [];
+      for (let i = 0; i < total; i++) {
+        btn.textContent = `拆分中… (${i + 1}/${total})`;
+        const out = await PDFDocument.create();
+        (await out.copyPages(src, [i])).forEach((p) => out.addPage(p));
+        const bytes = await out.save();
+        const pad = String(i + 1).padStart(String(total).length, '0');
+        entries.push({ name: `${base}_第${pad}页.pdf`, data: new Uint8Array(bytes) });
+      }
+      btn.textContent = '打包中…';
+      downloadImage(buildZip(entries), `${base}_拆分.zip`);
+    }
+  } catch (e) {
+    alert('拆分失败:' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
 }
 
 // ============================================================
@@ -1094,11 +1268,37 @@ filterReset.addEventListener('click', () => {
 // 工具切换(每个工具独立界面)
 // ============================================================
 function switchTool(view) {
+  const wasPdf = isPdfTool(state.view);
+  const nowPdf = isPdfTool(view);
+
+  // 图片工具与 PDF 工具的文件类型不通用,切换时清掉已选文件,避免误处理
+  if (wasPdf !== nowPdf && state.files.length) {
+    state.files = [];
+    results.hidden = true;
+    clearResults();
+  }
+
   state.view = view;
   document.querySelectorAll('.tool-tab').forEach((t) => t.classList.toggle('active', t.dataset.view === view));
   document.querySelectorAll('.tool-panel').forEach((p) => {
     p.hidden = p.dataset.panel !== view;
   });
+
+  // 上传区随工具切换接受类型与文案
+  if (nowPdf) {
+    fileInput.accept = '.pdf,application/pdf';
+    dropIcon.textContent = '📄';
+    dropText.innerHTML = '拖拽 PDF 到这里,或 <span class="link">点击选择</span>';
+    dropHint.textContent = view === 'pdfmerge' ? '可多选,按选择顺序合并(会员)' : '支持单个 PDF 文件';
+  } else {
+    fileInput.accept = 'image/*';
+    dropIcon.textContent = '📁';
+    dropText.innerHTML = '拖拽图片到这里,或 <span class="link">点击选择</span>';
+    dropHint.textContent = '支持 JPG / PNG / WebP,可多选';
+  }
+
+  renderFileBar();
+  refreshSplitInfo();
 }
 
 document.querySelectorAll('.tool-tab').forEach((tab) => {
@@ -1110,26 +1310,54 @@ function updateCollageLock() {
 }
 collageUpgrade.addEventListener('click', () => { upgradeModal.hidden = false; });
 
+// PDF 工具的会员门控提示
+function updateProcessLocks() {
+  if (!pdfmergeLock) return;
+  pdfmergeLock.hidden = state.premium;
+  pdfsplitLock.hidden = state.premium;
+}
+pdfmergeUpgrade.addEventListener('click', () => { upgradeModal.hidden = false; });
+pdfsplitUpgrade.addEventListener('click', () => { upgradeModal.hidden = false; });
+
+// 拆分方式切换:只有「提取指定页」需要填页码范围
+function updateSplitRangeField() {
+  splitRangeField.hidden = splitMode.value !== 'extract';
+}
+splitMode.addEventListener('change', updateSplitRangeField);
+
 // ============================================================
 // 事件绑定
 // ============================================================
 function handleFiles(fileList) {
-  const files = Array.from(fileList).filter((f) => f.type.startsWith('image/'));
-  if (!files.length) return;
+  const wantPdf = isPdfTool(state.view);
+  const incoming = Array.from(fileList);
+  const files = incoming.filter((f) => (wantPdf ? isPdfFile(f) : f.type.startsWith('image/')));
+
+  if (!files.length) {
+    alert(wantPdf ? '请选择 PDF 文件' : '请选择图片文件');
+    return;
+  }
+  if (files.length < incoming.length) {
+    alert(wantPdf
+      ? '已忽略非 PDF 文件,本工具只处理 PDF'
+      : '已忽略非图片文件,本工具只处理图片');
+  }
 
   if (!state.premium && (files.length > 1 || state.files.length + files.length > 1)) {
-    alert('免费版一次只能处理 1 张图片,升级会员可批量处理 ⭐');
+    alert('免费版一次只能处理 1 个文件,升级会员可批量处理 ⭐');
     files.length = 1;
     if (state.files.length >= 1) files.length = 0;
   }
+  if (!files.length) return;
 
   state.files = state.files.concat(files);
   renderFileBar();
+  refreshSplitInfo();
   results.hidden = true;
   clearResults();
 }
 
-// ---- 已选图片预览 ----
+// ---- 已选文件预览 ----
 let thumbUrls = []; // 已生成的缩略图 objectURL,换批时统一回收
 
 function revokeThumbs() {
@@ -1139,34 +1367,60 @@ function revokeThumbs() {
 
 function renderFileBar() {
   const n = state.files.length;
+  const pdfMode = isPdfTool(state.view);
+  const canReorder = state.view === 'pdfmerge' && n > 1;
   fileBar.hidden = n === 0;
   revokeThumbs();
   thumbList.innerHTML = '';
+  updateProcessLocks();
   if (!n) {
     fileCount.textContent = '';
     return;
   }
-  fileCount.innerHTML = `已选 <b>${n}</b> 张图片`;
+  fileCount.innerHTML = `已选 <b>${n}</b> 个${pdfMode ? ' PDF' : '图片'}`;
+
   state.files.forEach((file, i) => {
-    const url = URL.createObjectURL(file);
-    thumbUrls.push(url);
     const el = document.createElement('div');
     el.className = 'thumb';
-    el.title = '点击查看大图';
+    const pdf = isPdfFile(file);
+    let body;
+    if (pdf) {
+      body = '<div class="thumb-img thumb-doc">📄<span>PDF</span></div>';
+    } else {
+      const url = URL.createObjectURL(file);
+      thumbUrls.push(url);
+      body = `<img class="thumb-img" src="${url}" alt="" />`;
+    }
     el.innerHTML = `
-      <img class="thumb-img" src="${url}" alt="" />
+      ${body}
       ${n > 1 ? `<span class="thumb-badge">${i + 1}</span>` : ''}
-      <button class="thumb-del" title="移除这张" aria-label="移除">×</button>
+      ${canReorder ? `
+        <div class="thumb-order">
+          <button class="thumb-mv" data-mv="up" title="上移" ${i === 0 ? 'disabled' : ''}>▲</button>
+          <button class="thumb-mv" data-mv="down" title="下移" ${i === n - 1 ? 'disabled' : ''}>▼</button>
+        </div>` : ''}
+      <button class="thumb-del" title="移除" aria-label="移除">×</button>
       <div class="thumb-meta">
         <div class="thumb-name">${esc(file.name)}</div>
         <div class="thumb-size">${fmtSize(file.size)}</div>
       </div>
     `;
-    el.addEventListener('click', () => openPreview(i));
+    if (!pdf) {
+      el.title = '点击查看大图';
+      el.addEventListener('click', () => openPreview(i));
+    }
     el.querySelector('.thumb-del').addEventListener('click', (e) => {
-      e.stopPropagation(); // 别触发预览
+      e.stopPropagation();
       removeFile(i);
     });
+    if (canReorder) {
+      el.querySelectorAll('.thumb-mv').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          moveFile(i, btn.dataset.mv === 'up' ? -1 : 1);
+        });
+      });
+    }
     thumbList.appendChild(el);
   });
 }
@@ -1174,8 +1428,18 @@ function renderFileBar() {
 function removeFile(index) {
   state.files.splice(index, 1);
   renderFileBar();
+  refreshSplitInfo();
   results.hidden = true;
   clearResults();
+}
+
+// 调整顺序(合并 PDF 用)
+function moveFile(index, delta) {
+  const j = index + delta;
+  if (j < 0 || j >= state.files.length) return;
+  const [f] = state.files.splice(index, 1);
+  state.files.splice(j, 0, f);
+  renderFileBar();
 }
 
 let previewUrl = ''; // 当前预览的 objectURL,关闭弹窗时回收
@@ -1255,6 +1519,8 @@ async function onProcess(process) {
     case 'collage': await collageFiles(); break;
     case 'topdf': await topdfFiles(); break;
     case 'tobase64': await tobase64Files(); break;
+    case 'pdfmerge': await mergePdfs(); break;
+    case 'pdfsplit': await splitPdf(); break;
   }
 }
 document.querySelectorAll('[data-process]').forEach((btn) => {
@@ -1407,3 +1673,4 @@ initAuth();
 switchTool('compress');
 updateRotateStatus();
 updateCropStatus();
+updateSplitRangeField();

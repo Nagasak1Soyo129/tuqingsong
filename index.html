@@ -29,6 +29,8 @@
     <button class="tool-tab" data-view="collage">拼图<span class="tab-tag">会员</span></button>
     <button class="tool-tab" data-view="topdf">转PDF</button>
     <button class="tool-tab" data-view="tobase64">转Base64</button>
+    <button class="tool-tab" data-view="pdfmerge">PDF合并<span class="tab-tag">会员</span></button>
+    <button class="tool-tab" data-view="pdfsplit">PDF拆分</button>
   </nav>
 
   <main>
@@ -41,9 +43,9 @@
     <section id="dropZone" class="drop-zone">
       <input type="file" id="fileInput" accept="image/*" multiple hidden />
       <div class="drop-inner">
-        <div class="drop-icon">📁</div>
-        <p>拖拽图片到这里,或 <span class="link">点击选择</span></p>
-        <p class="hint">支持 JPG / PNG / WebP,可多选</p>
+        <div class="drop-icon" id="dropIcon">📁</div>
+        <p id="dropText">拖拽图片到这里,或 <span class="link">点击选择</span></p>
+        <p class="hint" id="dropHint">支持 JPG / PNG / WebP,可多选</p>
       </div>
     </section>
 
@@ -239,6 +241,39 @@
           <span class="muted" id="b64Len"></span>
         </div>
       </div>
+    </section>
+
+    <!-- ============ PDF 合并(会员) ============ -->
+    <section class="tool-panel" data-panel="pdfmerge" hidden>
+      <div class="tp-head"><h2>PDF 合并 <span class="badge">⭐ 会员</span></h2><p>多个 PDF 按顺序合成一个,可在下方列表调整页序</p></div>
+      <div class="tp-grid">
+        <div class="tp-field">
+          <label>输出文件名</label>
+          <input type="text" id="mergeName" value="图轻松_合并" />
+        </div>
+      </div>
+      <button class="btn-primary" data-process="pdfmerge">开始合并</button>
+      <p class="tp-lock" id="pdfmergeLock" hidden>🔒 合并需要 2 个以上 PDF,<a class="link-upgrade" id="pdfmergeUpgrade">升级会员解锁批量</a></p>
+    </section>
+
+    <!-- ============ PDF 拆分 ============ -->
+    <section class="tool-panel" data-panel="pdfsplit" hidden>
+      <div class="tp-head"><h2>PDF 拆分 / 提取页</h2><p id="splitInfo">选择一个 PDF 后显示页数</p></div>
+      <div class="tp-grid">
+        <div class="tp-field">
+          <label>拆分方式</label>
+          <select id="splitMode">
+            <option value="extract">提取指定页(合成一个 PDF)</option>
+            <option value="each">每页拆成单独 PDF<span class="opt-tag">会员</span></option>
+          </select>
+        </div>
+        <div class="tp-field" id="splitRangeField">
+          <label>页码范围(如 1-3,5,8)</label>
+          <input type="text" id="splitRange" placeholder="留空 = 全部页" />
+        </div>
+      </div>
+      <button class="btn-primary" data-process="pdfsplit">开始拆分</button>
+      <p class="tp-lock" id="pdfsplitLock" hidden>🔒 「每页拆成单独 PDF」会输出多个文件,<a class="link-upgrade" id="pdfsplitUpgrade">升级会员解锁</a></p>
     </section>
 
     <!-- 结果区 -->
