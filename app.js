@@ -21,11 +21,25 @@ const state = {
 
 // ---- DOM 引用 ----
 const $ = (sel) => document.querySelector(sel);
+
+// 转义后再拼进 innerHTML(文件名/备注等来自外部,防止被当成 HTML 执行)
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, (c) => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
 const dropZone = $('#dropZone');
 const fileInput = $('#fileInput');
 const fileBar = $('#fileBar');
 const fileCount = $('#fileCount');
+const thumbList = $('#thumbList');
 const clearBtn = $('#clearBtn');
+const previewModal = $('#previewModal');
+const closePreview = $('#closePreview');
+const previewClose = $('#previewClose');
+const previewImg = $('#previewImg');
+const previewName = $('#previewName');
+const previewMeta = $('#previewMeta');
 const results = $('#results');
 const resultList = $('#resultList');
 const countEl = $('#count');
@@ -264,8 +278,8 @@ function renderCodeList(codes) {
   }
   codeList.innerHTML = codes.map((c) => `
     <div class="code-row ${c.usedBy ? 'used' : ''}">
-      <span class="code-text">${c.code}</span>
-      <span class="code-meta">${c.usedBy ? '已用 · ' + c.usedBy : '未使用'}${c.note ? ' · ' + c.note : ''}</span>
+      <span class="code-text">${esc(c.code)}</span>
+      <span class="code-meta">${c.usedBy ? '已用 · ' + esc(c.usedBy) : '未使用'}${c.note ? ' · ' + esc(c.note) : ''}</span>
     </div>
   `).join('');
 }
@@ -710,7 +724,7 @@ function renderResult(item) {
   div.innerHTML = `
     <img src="${item.url}" alt="" />
     <div class="result-info">
-      <div class="result-name">${outName}</div>
+      <div class="result-name">${esc(outName)}</div>
       <div class="result-size">
         ${fmtSize(item.origSize)} → ${fmtSize(item.outSize)}
         ${item.savedPct >= 0
@@ -1110,14 +1124,83 @@ function handleFiles(fileList) {
   }
 
   state.files = state.files.concat(files);
-  updateFileBar();
+  renderFileBar();
   results.hidden = true;
   clearResults();
 }
 
-function updateFileBar() {
-  fileBar.hidden = state.files.length === 0;
-  fileCount.innerHTML = `已选 <b>${state.files.length}</b> 张图片`;
+// ---- 已选图片预览 ----
+let thumbUrls = []; // 已生成的缩略图 objectURL,换批时统一回收
+
+function revokeThumbs() {
+  thumbUrls.forEach((u) => URL.revokeObjectURL(u));
+  thumbUrls = [];
+}
+
+function renderFileBar() {
+  const n = state.files.length;
+  fileBar.hidden = n === 0;
+  revokeThumbs();
+  thumbList.innerHTML = '';
+  if (!n) {
+    fileCount.textContent = '';
+    return;
+  }
+  fileCount.innerHTML = `已选 <b>${n}</b> 张图片`;
+  state.files.forEach((file, i) => {
+    const url = URL.createObjectURL(file);
+    thumbUrls.push(url);
+    const el = document.createElement('div');
+    el.className = 'thumb';
+    el.title = '点击查看大图';
+    el.innerHTML = `
+      <img class="thumb-img" src="${url}" alt="" />
+      ${n > 1 ? `<span class="thumb-badge">${i + 1}</span>` : ''}
+      <button class="thumb-del" title="移除这张" aria-label="移除">×</button>
+      <div class="thumb-meta">
+        <div class="thumb-name">${esc(file.name)}</div>
+        <div class="thumb-size">${fmtSize(file.size)}</div>
+      </div>
+    `;
+    el.addEventListener('click', () => openPreview(i));
+    el.querySelector('.thumb-del').addEventListener('click', (e) => {
+      e.stopPropagation(); // 别触发预览
+      removeFile(i);
+    });
+    thumbList.appendChild(el);
+  });
+}
+
+function removeFile(index) {
+  state.files.splice(index, 1);
+  renderFileBar();
+  results.hidden = true;
+  clearResults();
+}
+
+let previewUrl = ''; // 当前预览的 objectURL,关闭弹窗时回收
+
+function openPreview(index) {
+  const file = state.files[index];
+  if (!file) return;
+  if (previewUrl) URL.revokeObjectURL(previewUrl);
+  previewUrl = URL.createObjectURL(file);
+  previewImg.src = previewUrl;
+  previewName.textContent = file.name;
+  previewMeta.textContent = `文件大小 ${fmtSize(file.size)}`;
+  previewModal.hidden = false;
+  // 读真实像素尺寸补充说明(与预览共用同一个 URL,等读到后再回收)
+  const probe = new Image();
+  probe.onload = () => {
+    previewMeta.textContent = `${probe.naturalWidth} × ${probe.naturalHeight} 像素 · 文件大小 ${fmtSize(file.size)}`;
+  };
+  probe.src = previewUrl;
+}
+
+function closePreviewModal() {
+  previewModal.hidden = true;
+  previewImg.removeAttribute('src'); // 释放解码资源
+  if (previewUrl) { URL.revokeObjectURL(previewUrl); previewUrl = ''; }
 }
 
 dropZone.addEventListener('click', () => fileInput.click());
@@ -1138,11 +1221,19 @@ convertQuality.addEventListener('input', () => { convertQualityVal.textContent =
 
 clearBtn.addEventListener('click', () => {
   state.files = [];
-  updateFileBar();
+  renderFileBar();
   results.hidden = true;
   clearResults();
 });
 zipBtn.addEventListener('click', downloadAllZip);
+
+// 图片预览弹窗
+closePreview.addEventListener('click', closePreviewModal);
+previewClose.addEventListener('click', closePreviewModal);
+previewModal.addEventListener('click', (e) => { if (e.target === previewModal) closePreviewModal(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape' && !previewModal.hidden) closePreviewModal();
+});
 
 // 各工具「开始」按钮
 async function onProcess(process) {

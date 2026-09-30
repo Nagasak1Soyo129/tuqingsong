@@ -279,20 +279,109 @@ main {
 .drop-inner .link { color: var(--accent); font-weight: 600; }
 .hint { color: var(--muted); font-size: 13px; margin-top: 6px; }
 
-/* 已选文件栏 */
+/* 已选图片预览 */
 .file-bar {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--panel-2);
+  border: 1px solid var(--border-2);
+  border-radius: 12px;
+  animation: slideUp .25s ease;
+}
+.fb-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-top: 16px;
-  padding: 12px 16px;
-  background: var(--panel-2);
-  border: 1px solid var(--border-2);
-  border-radius: 12px;
+  margin-bottom: 12px;
 }
 .file-count { font-size: 14px; color: var(--muted); }
 .file-count b { color: var(--accent); }
+
+.thumb-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 12px;
+}
+.thumb {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  overflow: hidden;
+  cursor: zoom-in;
+  transition: border-color .18s, box-shadow .18s, transform .15s;
+}
+.thumb:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-2px);
+}
+.thumb:active { transform: translateY(0) scale(0.98); }
+.thumb-img {
+  display: block;
+  width: 100%;
+  height: 96px;
+  object-fit: cover;
+  background: var(--panel-2);
+}
+.thumb-meta {
+  padding: 7px 9px;
+  border-top: 1px solid var(--border-2);
+}
+.thumb-name {
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.thumb-size { font-size: 11px; color: var(--muted); margin-top: 1px; }
+.thumb-del {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 24px; height: 24px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.62);
+  color: #fff;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0;
+  transition: opacity .18s, background .18s, transform .12s;
+}
+.thumb:hover .thumb-del { opacity: 1; }
+.thumb-del:hover { background: var(--danger); }
+.thumb-del:active { transform: scale(0.86); }
+.thumb-badge {
+  position: absolute;
+  top: 6px; left: 6px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  background: rgba(15, 23, 42, 0.55);
+  border-radius: 20px;
+  padding: 2px 7px;
+}
+
+/* 图片预览弹窗 */
+.preview-box { max-width: 860px; }
+.preview-meta { color: var(--muted); font-size: 13px; margin: 4px 0 14px; }
+.preview-img {
+  display: block;
+  width: 100%;
+  max-height: 62vh;
+  object-fit: contain;
+  border-radius: 12px;
+  background:
+    linear-gradient(45deg, #eef2f8 25%, transparent 25%, transparent 75%, #eef2f8 75%),
+    linear-gradient(45deg, #eef2f8 25%, #fff 25%, #fff 75%, #eef2f8 75%);
+  background-size: 18px 18px;
+  background-position: 0 0, 9px 9px;
+}
+.preview-box .crop-actions { margin-top: 14px; }
 
 /* 工具面板 */
 .tool-panel {

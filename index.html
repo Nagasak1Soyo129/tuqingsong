@@ -47,11 +47,14 @@
       </div>
     </section>
 
-    <!-- 已选文件栏 -->
-    <div id="fileBar" class="file-bar" hidden>
-      <span id="fileCount" class="file-count"></span>
-      <button id="clearBtn" class="btn-ghost btn-sm">清空</button>
-    </div>
+    <!-- 已选图片预览 -->
+    <section id="fileBar" class="file-bar" hidden>
+      <div class="fb-head">
+        <span id="fileCount" class="file-count"></span>
+        <button id="clearBtn" class="btn-ghost btn-sm">清空全部</button>
+      </div>
+      <div id="thumbList" class="thumb-list"></div>
+    </section>
 
     <!-- ============ 压缩 ============ -->
     <section class="tool-panel" data-panel="compress">
@@ -313,6 +316,19 @@
         <input type="password" id="authPass" placeholder="密码(至少 6 位)" autocomplete="current-password" />
         <button id="authSubmit" class="btn-primary">登录</button>
         <p id="authMsg" class="activate-msg"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图片预览弹窗 -->
+  <div id="previewModal" class="modal" hidden>
+    <div class="modal-box preview-box">
+      <button class="modal-close" id="closePreview">×</button>
+      <h2 id="previewName">图片预览</h2>
+      <p class="preview-meta" id="previewMeta"></p>
+      <img id="previewImg" class="preview-img" alt="" />
+      <div class="crop-actions">
+        <button class="btn-ghost" id="previewClose">关闭</button>
       </div>
     </div>
   </div>
