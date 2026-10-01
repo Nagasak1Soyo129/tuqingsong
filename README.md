@@ -54,6 +54,15 @@
 - PDF 处理:引入 [pdf-lib](https://github.com/Hopding/pdf-lib)(MIT)做合并/拆分/页面管理/叠加内容,**自托管在 `vendor/`**(不走 CDN,避免国内 CDN 被墙导致功能失效),只在用到 PDF 工具时懒加载,不影响首屏速度
 - **中文水印/页码的实现**:pdf-lib 内置字体不支持中文,嵌入 CJK 字体又要 5~15MB。改用 **canvas 把文字渲染成 PNG(3 倍超采样)再贴进 PDF**,天然支持中文与任意字体,零字体文件开销。代价是水印文字不可选中/搜索(对水印和页码无影响)
 
+## 推送代码(注意代理)
+
+GitHub 在国内**时通时不通**。仓库级代理配置已移除,因为代理没开时它会**直接导致推送失败**
+(`Failed to connect to github.com:443 over proxy 127.0.0.1`)。
+
+- 默认直接推:`git push origin main`(实测通常可用,只是偶尔慢)
+- 若直连超时,先开 v2rayN,再临时指定代理:
+  `git -c http.proxy=http://127.0.0.1:10808 -c https.proxy=http://127.0.0.1:10808 push origin main`
+
 ## 文件结构
 
 ```
