@@ -3,11 +3,71 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>图轻松 - 免费图片压缩 / 转格式 / 加水印 / 拼图</title>
-  <meta name="description" content="在线图片压缩、格式转换、加水印、调色、拼图、转PDF,纯浏览器处理,图片不上传服务器,安全快速。" />
+  <title>图轻松 - 在线图片压缩、PDF合并加水印,图片不上传服务器</title>
+  <meta name="description" content="免费在线工具箱:图片压缩到指定大小、格式转换、加水印、调色、拼图,以及 PDF 合并、拆分、加水印、加页码、盖章。全部在浏览器本地完成,图片不上传服务器,隐私安全,免注册即用。" />
+  <meta name="keywords" content="图片压缩,在线图片压缩,图片压缩到指定大小,图片压缩到200kb,压缩图片,PDF合并,PDF拆分,PDF加水印,PDF加页码,图片转PDF,图片格式转换,图片加水印,免费图片工具,在线工具" />
+  <meta name="robots" content="index,follow" />
+  <meta name="theme-color" content="#2f6bff" />
+
+  <!-- 社交分享卡片(微信 / 小红书 / 知乎 分享链接时展示) -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="图轻松" />
+  <meta property="og:title" content="图轻松 - 免费的在线图片压缩、PDF 合并加水印工具" />
+  <meta property="og:description" content="图片和 PDF 全部在你的浏览器里处理,不上传服务器。免费、无广告、免注册。" />
+  <meta property="og:url" content="https://tuqingsong.pages.dev/" />
+  <meta name="twitter:card" content="summary" />
+
+  <link rel="canonical" href="https://tuqingsong.pages.dev/" />
   <link rel="stylesheet" href="style.css" />
+
+  <!-- 结构化数据:帮搜索引擎理解这是个免费在线工具 -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "图轻松",
+    "url": "https://tuqingsong.pages.dev/",
+    "applicationCategory": "MultimediaApplication",
+    "operatingSystem": "Web",
+    "description": "免费在线图片与 PDF 工具箱,全部在浏览器本地处理,不上传服务器。",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
+    "featureList": [
+      "图片压缩到指定大小", "图片格式转换", "图片加水印", "图片调色滤镜", "图片拼图",
+      "PDF 合并", "PDF 拆分提取页", "PDF 加水印", "PDF 加页码", "PDF 盖章签名"
+    ]
+  }
+  </script>
 </head>
 <body>
+  <!--
+    无 JS 兜底:本站全部功能依赖 JavaScript,爬虫不执行 JS 时看到的是空白页。
+    这段给爬虫提供可索引的正文,正常用户不会看到。
+  -->
+  <noscript>
+    <h1>图轻松 —— 免费在线图片与 PDF 工具箱</h1>
+    <p>全部功能在浏览器本地完成,图片和文件<strong>不上传服务器</strong>,隐私安全、免注册即用。</p>
+    <h2>图片工具</h2>
+    <ul>
+      <li>图片压缩 —— 可按质量压缩,也可指定「压缩到 200KB」这类目标大小</li>
+      <li>格式转换 —— JPG / WebP / PNG 互转</li>
+      <li>加水印 —— 文字水印,位置可调</li>
+      <li>调整尺寸 / 旋转翻转 / 裁剪</li>
+      <li>调色滤镜 —— 亮度、对比度、饱和度、黑白、复古</li>
+      <li>拼图 —— 横向、纵向、网格、九宫格</li>
+      <li>图片转 PDF、图片转 Base64</li>
+    </ul>
+    <h2>PDF 工具</h2>
+    <ul>
+      <li>PDF 合并 —— 多个 PDF 按顺序合成一个</li>
+      <li>PDF 拆分 —— 提取指定页,或每页拆成单独文件</li>
+      <li>PDF 加水印 —— 文字或图片水印,支持平铺防截图</li>
+      <li>PDF 加页码 —— 多种格式与位置</li>
+      <li>PDF 页面管理 —— 删除、旋转、调序、插入空白页</li>
+      <li>PDF 盖章 —— 公章、签名、二维码贴到指定页</li>
+    </ul>
+    <p>本页面需要启用 JavaScript 才能使用这些工具。</p>
+  </noscript>
+
   <div class="bg-fx" aria-hidden="true"><span></span><span></span><span></span></div>
 
   <header class="topbar">
@@ -561,5 +621,22 @@
   </div>
 
   <script src="app.js"></script>
+
+  <!--
+    ============================================================
+    访问统计(目前未启用)
+    ============================================================
+    推荐做法(零代码):Cloudflare 后台 → Workers 和 Pages → 选 tuqingsong
+    → 「分析」/「Web Analytics」→ 打开开关。Cloudflare 会自动注入统计脚本,
+    无需改这个文件。
+
+    手动做法:在上面打开开关后拿到 site_tag,把下面注释解开并替换 token:
+
+    <script defer src="https://static.cloudflareinsights.com/beacon.min.js"
+            data-cf-beacon='{"token": "把这里换成你的 site_tag"}'></script>
+
+    Cloudflare Web Analytics 免费、无 Cookie、不收集个人信息 ——
+    和本站「不上传图片」的隐私定位一致。
+  -->
 </body>
 </html>

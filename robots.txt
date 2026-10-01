@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+# 接口不参与索引
+Disallow: /api/
+# 第三方库文件,无索引价值,省爬虫配额
+Disallow: /vendor/
+
+Sitemap: https://tuqingsong.pages.dev/sitemap.xml
