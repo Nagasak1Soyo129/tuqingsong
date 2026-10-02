@@ -57,9 +57,41 @@ const compressFormat = $('#compressFormat');
 const formatSel = $('#format');
 const convertQuality = $('#convertQuality');
 const convertQualityVal = $('#convertQualityVal');
-// 加水印
+// 加水印(增强版:文字/图片、平铺、旋转、透明度)
+const wmType = $('#wmType');
+const wmTextField = $('#wmTextField');
 const wmText = $('#wmText');
-const wmPos = $('#wmPos');
+const wmImageField = $('#wmImageField');
+const wmImage = $('#wmImage');
+const wmSizeField = $('#wmSizeField');
+const wmSize = $('#wmSize');
+const wmSizeVal = $('#wmSizeVal');
+const wmColorField = $('#wmColorField');
+const wmColor = $('#wmColor');
+const wmBoldField = $('#wmBoldField');
+const wmBold = $('#wmBold');
+const wmScale = $('#wmScale');
+const wmScaleVal = $('#wmScaleVal');
+const wmAngle = $('#wmAngle');
+const wmAngleVal = $('#wmAngleVal');
+const wmOpacity = $('#wmOpacity');
+const wmOpacityVal = $('#wmOpacityVal');
+const wmMargin = $('#wmMargin');
+const wmMarginVal = $('#wmMarginVal');
+const wmTile = $('#wmTile');
+const wmPosGrid = $('#wmPosGrid');
+// 贴纸
+const stickerGrid = $('#stickerGrid');
+const stickerImage = $('#stickerImage');
+const stickerScale = $('#stickerScale');
+const stickerScaleVal = $('#stickerScaleVal');
+const stickerAngle = $('#stickerAngle');
+const stickerAngleVal = $('#stickerAngleVal');
+const stickerOpacity = $('#stickerOpacity');
+const stickerOpacityVal = $('#stickerOpacityVal');
+const stickerMargin = $('#stickerMargin');
+const stickerMarginVal = $('#stickerMarginVal');
+const stickerPosGrid = $('#stickerPosGrid');
 // 调整尺寸
 const resizeW = $('#resizeW');
 const resizeH = $('#resizeH');
@@ -608,6 +640,167 @@ function savePdf(bytes, name) {
 }
 
 // ============================================================
+// 水印 / 贴纸:往 canvas 上叠加图片(共用同一套定位与平铺逻辑)
+// ============================================================
+// 九宫格:[列, 行],0=起始 1=居中 2=末尾
+const POS_MAP = {
+  tl: [0, 0], tc: [1, 0], tr: [2, 0],
+  ml: [0, 1], center: [1, 1], mr: [2, 1],
+  bl: [0, 2], bc: [1, 2], br: [2, 2],
+};
+
+// 九宫格选择器:点一下选中,互斥高亮
+function bindPosGrid(grid) {
+  if (!grid) return;
+  grid.querySelectorAll('.pos-cell').forEach((cell) => {
+    cell.addEventListener('click', () => {
+      grid.querySelectorAll('.pos-cell').forEach((c) => c.classList.remove('active'));
+      cell.classList.add('active');
+    });
+  });
+}
+function getPos(grid) {
+  const a = grid && grid.querySelector('.pos-cell.active');
+  return a ? a.dataset.pos : 'br';
+}
+
+// 按九宫格把一张图叠到 canvas 上(可旋转、半透明)
+function overlayOnCanvas(ctx, W, H, img, o) {
+  let w = W * (o.widthPct / 100);
+  let h = w * (img.height / img.width);
+  // 极端长宽比(全景图 / 长条图)下会超出画布,等比缩回来
+  const k = Math.min(1, (W * 0.95) / w, (H * 0.95) / h);
+  w *= k;
+  h *= k;
+
+  // 边距按各自的轴算:横向按宽、纵向按高。
+  // 若两个轴都用宽度,全景图上竖直边距会大得离谱,把元素顶出画布
+  const mx = W * (o.marginPct / 100);
+  const my = H * (o.marginPct / 100);
+  const [col, row] = POS_MAP[o.pos] || POS_MAP.br;
+  let x = col === 0 ? mx : col === 2 ? W - mx - w : (W - w) / 2;
+  let y = row === 0 ? my : row === 2 ? H - my - h : (H - h) / 2;
+  // 边距和尺寸都拉满时可能算出负坐标,钳住保证不跑出画布
+  x = Math.max(0, Math.min(x, W - w));
+  y = Math.max(0, Math.min(y, H - h));
+
+  ctx.save();
+  ctx.globalAlpha = o.opacity / 100;
+  ctx.translate(x + w / 2, y + h / 2);
+  ctx.rotate((o.angle || 0) * Math.PI / 180);
+  ctx.drawImage(img, -w / 2, -h / 2, w, h);
+  ctx.restore();
+}
+
+// 平铺整张图(防截图最有效)
+function tileOnCanvas(ctx, W, H, img, o) {
+  const w = W * (o.widthPct / 100);
+  const h = w * (img.height / img.width);
+  const stepX = w * 1.4, stepY = h * 2.2;
+  // 必须让 (n-1)*step + 自身尺寸 ≥ 画布尺寸;少算自己那一格会在边上留出没水印的空白
+  const cols = Math.max(1, Math.ceil((W - w) / stepX) + 1);
+  const rows = Math.max(1, Math.ceil((H - h) / stepY) + 1);
+  const offX = (W - (cols - 1) * stepX - w) / 2;
+  const offY = (H - (rows - 1) * stepY - h) / 2;
+
+  ctx.save();
+  ctx.globalAlpha = o.opacity / 100;
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      ctx.save();
+      ctx.translate(offX + c * stepX + w / 2, offY + r * stepY + h / 2);
+      ctx.rotate((o.angle || 0) * Math.PI / 180);
+      ctx.drawImage(img, -w / 2, -h / 2, w, h);
+      ctx.restore();
+    }
+  }
+  ctx.restore();
+}
+
+function dataUrlToImage(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = dataUrl;
+  });
+}
+
+// emoji 画成图(内置贴纸)
+function emojiToPng(ch, size = 160) {
+  const c = document.createElement('canvas');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+  ctx.font = `${Math.round(size * 0.78)}px "Apple Color Emoji", "Segoe UI Emoji", "Noto Color Emoji", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(ch, size / 2, size / 2 + size * 0.04);
+  return c.toDataURL('image/png');
+}
+
+// 文字画成圆角标签(电商角标)
+function badgeToPng(text, bg) {
+  const fs = 56;
+  const padX = fs * 0.62, padY = fs * 0.34;
+  const probe = document.createElement('canvas').getContext('2d');
+  const font = `bold ${fs}px "PingFang SC", "Microsoft YaHei", sans-serif`;
+  probe.font = font;
+  const W = Math.ceil(probe.measureText(text).width + padX * 2);
+  const H = Math.ceil(fs + padY * 2);
+
+  const c = document.createElement('canvas');
+  c.width = W; c.height = H;
+  const ctx = c.getContext('2d');
+  const r = H / 2;
+  ctx.beginPath();
+  ctx.moveTo(r, 0);
+  ctx.arcTo(W, 0, W, H, r);
+  ctx.arcTo(W, H, 0, H, r);
+  ctx.arcTo(0, H, 0, 0, r);
+  ctx.arcTo(0, 0, W, 0, r);
+  ctx.closePath();
+  ctx.fillStyle = bg;
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = font;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, W / 2, H / 2 + 1);
+  return c.toDataURL('image/png');
+}
+
+const EMOJI_LIST = ['⭐', '❤️', '🔥', '👍', '✅', '💯', '🎉', '😊', '📌', '⚡', '🆕', '💰'];
+const BADGE_LIST = [
+  ['包邮', '#ff4d4f'], ['热卖', '#ff7a45'], ['新品', '#2f6bff'], ['特价', '#e5484d'],
+  ['已验', '#0f9d58'], ['现货', '#00b4d8'], ['正品', '#7c3aed'], ['限时', '#f59e0b'],
+];
+let stickerDataUrls = [];
+let stickerPick = 0;
+
+function buildStickerGrid() {
+  if (!stickerGrid) return;
+  stickerDataUrls = [
+    ...EMOJI_LIST.map((e) => emojiToPng(e)),
+    ...BADGE_LIST.map(([t, bg]) => badgeToPng(t, bg)),
+  ];
+  stickerGrid.innerHTML = '';
+  stickerDataUrls.forEach((url, i) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'sticker-item' + (i === 0 ? ' active' : '');
+    b.dataset.idx = String(i);
+    b.innerHTML = `<img src="${url}" alt="" />`;
+    b.addEventListener('click', () => {
+      stickerPick = i;
+      stickerGrid.querySelectorAll('.sticker-item').forEach((x) => x.classList.remove('active'));
+      b.classList.add('active');
+      if (stickerImage) stickerImage.value = ''; // 选了内置贴纸就清掉上传的,避免歧义
+    });
+    stickerGrid.appendChild(b);
+  });
+}
+
+// ============================================================
 // 图片处理核心
 // ============================================================
 const MAX_DIM = 4096;
@@ -699,37 +892,6 @@ function applyResize(src) {
   return c;
 }
 
-// 画水印(可选,不强制)
-function drawWatermark(ctx, w, h, text) {
-  if (!text) return;
-  const pos = wmPos.value;
-  const fontSize = Math.max(14, Math.round(w / 20));
-  ctx.font = `bold ${fontSize}px "PingFang SC", "Microsoft YaHei", sans-serif`;
-  ctx.textBaseline = 'bottom';
-  const metrics = ctx.measureText(text);
-  const tw = metrics.width;
-  const pad = fontSize * 0.6;
-
-  ctx.fillStyle = 'rgba(255,255,255,0.75)';
-  ctx.shadowColor = 'rgba(0,0,0,0.55)';
-  ctx.shadowBlur = 4;
-  ctx.shadowOffsetX = 1;
-  ctx.shadowOffsetY = 1;
-
-  let x, y;
-  const margin = pad;
-  switch (pos) {
-    case 'br': x = w - tw - margin; y = h - margin; break;
-    case 'bl': x = margin;          y = h - margin; break;
-    case 'tr': x = w - tw - margin; y = fontSize + margin; break;
-    case 'tl': x = margin;          y = fontSize + margin; break;
-    case 'center':
-    default:   x = (w - tw) / 2;    y = (h + fontSize) / 2; break;
-  }
-  ctx.fillText(text, x, y);
-  ctx.shadowBlur = 0;
-}
-
 // 调色:拼出 CSS filter 字符串
 function buildFilterString() {
   const fl = state.filter;
@@ -811,10 +973,61 @@ async function convertOne(file) {
   return blob;
 }
 
+// 准备水印素材:文字渲染成 PNG,或用户上传的图片
+async function buildWatermarkAsset() {
+  if (wmType.value === 'image') {
+    const f = wmImage.files && wmImage.files[0];
+    if (!f) return null;
+    return dataUrlToImage(await fileToDataURL(f));
+  }
+  const text = wmText.value.trim();
+  if (!text) return null;
+  const png = textToPng(text, {
+    fontSize: parseInt(wmSize.value, 10),
+    color: wmColor.value,
+    angle: 0,                    // 旋转统一在叠加时做,这里不预转
+    bold: wmBold.checked,
+  });
+  return dataUrlToImage(png.dataUrl);
+}
+
 async function watermarkOne(file) {
   const img = await loadFile(file);
   const cv = safeCanvas(img);
-  drawWatermark(cv.getContext('2d'), cv.width, cv.height, wmText.value.trim());
+  const asset = await buildWatermarkAsset();
+  if (!asset) throw new Error('没有可用的水印内容');
+  const o = {
+    pos: getPos(wmPosGrid),
+    widthPct: parseInt(wmScale.value, 10),
+    opacity: parseInt(wmOpacity.value, 10),
+    angle: parseInt(wmAngle.value, 10),
+    marginPct: parseInt(wmMargin.value, 10),
+  };
+  const ctx = cv.getContext('2d');
+  if (wmTile.checked) tileOnCanvas(ctx, cv.width, cv.height, asset, o);
+  else overlayOnCanvas(ctx, cv.width, cv.height, asset, o);
+  const blob = await canvasToBlob(cv, outMime(file), qualityCap());
+  if (!blob) throw new Error('生成图片失败');
+  return blob;
+}
+
+// 贴纸:优先用上传的图片,否则用选中的内置贴纸
+async function stickerOne(file) {
+  const img = await loadFile(file);
+  const cv = safeCanvas(img);
+  const up = stickerImage.files && stickerImage.files[0];
+  let asset = null;
+  if (up) asset = await dataUrlToImage(await fileToDataURL(up));
+  else if (stickerDataUrls[stickerPick]) asset = await dataUrlToImage(stickerDataUrls[stickerPick]);
+  if (!asset) throw new Error('没有可用的贴纸');
+
+  overlayOnCanvas(cv.getContext('2d'), cv.width, cv.height, asset, {
+    pos: getPos(stickerPosGrid),
+    widthPct: parseInt(stickerScale.value, 10),
+    opacity: parseInt(stickerOpacity.value, 10),
+    angle: parseInt(stickerAngle.value, 10),
+    marginPct: parseInt(stickerMargin.value, 10),
+  });
   const blob = await canvasToBlob(cv, outMime(file), qualityCap());
   if (!blob) throw new Error('生成图片失败');
   return blob;
@@ -1849,6 +2062,22 @@ function updateSplitRangeField() {
 splitMode.addEventListener('change', updateSplitRangeField);
 
 // ---- PDF 水印:文字/图片切换只显示相关选项 ----
+// 水印类型切换:只显示相关选项
+function updateWmFields() {
+  const isText = wmType.value === 'text';
+  wmTextField.hidden = !isText;
+  wmSizeField.hidden = !isText;
+  wmColorField.hidden = !isText;
+  wmBoldField.hidden = !isText;
+  wmImageField.hidden = isText;
+}
+wmType.addEventListener('change', updateWmFields);
+
+// 九宫格 + 贴纸库初始化
+bindPosGrid(wmPosGrid);
+bindPosGrid(stickerPosGrid);
+buildStickerGrid();
+
 function updatePdfwmFields() {
   const isText = pdfwmType.value === 'text';
   pdfwmTextField.hidden = !isText;
@@ -1861,6 +2090,18 @@ pdfwmType.addEventListener('change', updatePdfwmFields);
 
 // ---- 滑块数值实时显示 ----
 const sliderBindings = [
+  // 水印(图片版)
+  [wmSize, wmSizeVal, (v) => v],
+  [wmScale, wmScaleVal, (v) => v + '%'],
+  [wmAngle, wmAngleVal, (v) => v],
+  [wmOpacity, wmOpacityVal, (v) => v + '%'],
+  [wmMargin, wmMarginVal, (v) => v + '%'],
+  // 贴纸
+  [stickerScale, stickerScaleVal, (v) => v + '%'],
+  [stickerAngle, stickerAngleVal, (v) => v],
+  [stickerOpacity, stickerOpacityVal, (v) => v + '%'],
+  [stickerMargin, stickerMarginVal, (v) => v + '%'],
+  // PDF 水印
   [pdfwmSize, pdfwmSizeVal, (v) => v],
   [pdfwmOpacity, pdfwmOpacityVal, (v) => v + '%'],
   [pdfwmAngle, pdfwmAngleVal, (v) => v],
@@ -2071,8 +2312,13 @@ async function onProcess(process) {
     case 'compress': await processFiles(compressOne); break;
     case 'convert': await processFiles(convertOne); break;
     case 'watermark':
-      if (!wmText.value.trim()) { alert('请先输入要添加的水印文字'); return; }
+      if (wmType.value === 'image') {
+        if (!(wmImage.files && wmImage.files[0])) { alert('请选择一张水印图片'); return; }
+      } else if (!wmText.value.trim()) {
+        alert('请先输入要添加的水印文字'); return;
+      }
       await processFiles(watermarkOne); break;
+    case 'sticker': await processFiles(stickerOne); break;
     case 'resize':
       if (!resizeW.value && !resizeH.value) { alert('请输入目标宽度或高度'); return; }
       await processFiles(resizeOne); break;
@@ -2259,4 +2505,5 @@ updateRotateStatus();
 updateCropStatus();
 updateSplitRangeField();
 updatePdfwmFields();
+updateWmFields();
 track('pv'); // 记一次页面浏览(含来源,用于判断哪个渠道有效)

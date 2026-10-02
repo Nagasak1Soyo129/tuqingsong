@@ -85,6 +85,7 @@
     <button class="tool-tab active" data-view="compress">压缩</button>
     <button class="tool-tab" data-view="convert">转格式</button>
     <button class="tool-tab" data-view="watermark">加水印</button>
+    <button class="tool-tab" data-view="sticker">贴纸</button>
     <button class="tool-tab" data-view="resize">调整尺寸</button>
     <button class="tool-tab" data-view="rotate">旋转</button>
     <button class="tool-tab" data-view="crop">裁剪</button>
@@ -169,26 +170,119 @@
       <button class="btn-primary" data-process="convert">开始转换</button>
     </section>
 
-    <!-- ============ 加水印 ============ -->
+    <!-- ============ 加水印(增强版) ============ -->
     <section class="tool-panel" data-panel="watermark" hidden>
-      <div class="tp-head"><h2>加水印</h2><p>可选水印,不强制</p></div>
+      <div class="tp-head"><h2>加水印</h2><p>文字或图片水印,支持平铺防盗图</p></div>
       <div class="tp-grid">
         <div class="tp-field">
-          <label>水印文字(留空则不加)</label>
+          <label>水印类型</label>
+          <select id="wmType">
+            <option value="text">文字水印</option>
+            <option value="image">图片水印(Logo / 印章)</option>
+          </select>
+        </div>
+        <div class="tp-field" id="wmTextField">
+          <label>水印文字</label>
           <input type="text" id="wmText" placeholder="如:© 你的名字" />
         </div>
+        <div class="tp-field" id="wmImageField" hidden>
+          <label>水印图片</label>
+          <input type="file" id="wmImage" accept="image/*" />
+        </div>
+        <div class="tp-field" id="wmSizeField">
+          <label>字号 <span class="val" id="wmSizeVal">32</span></label>
+          <input type="range" id="wmSize" min="10" max="120" value="32" />
+        </div>
+        <div class="tp-field" id="wmColorField">
+          <label>颜色</label>
+          <input type="color" id="wmColor" value="#ffffff" />
+        </div>
+        <div class="tp-field" id="wmBoldField">
+          <label>字重</label>
+          <label class="switch"><input type="checkbox" id="wmBold" checked /><span class="switch-slider"></span><span class="switch-label">加粗</span></label>
+        </div>
         <div class="tp-field">
-          <label>位置</label>
-          <select id="wmPos">
-            <option value="br">右下角</option>
-            <option value="bl">左下角</option>
-            <option value="tr">右上角</option>
-            <option value="tl">左上角</option>
-            <option value="center">居中</option>
-          </select>
+          <label>水印大小(占图宽)<span class="val" id="wmScaleVal">25%</span></label>
+          <input type="range" id="wmScale" min="3" max="100" value="25" />
+        </div>
+        <div class="tp-field">
+          <label>旋转角度 <span class="val" id="wmAngleVal">0</span></label>
+          <input type="range" id="wmAngle" min="-90" max="90" value="0" />
+        </div>
+        <div class="tp-field">
+          <label>不透明度 <span class="val" id="wmOpacityVal">75%</span></label>
+          <input type="range" id="wmOpacity" min="5" max="100" value="75" />
+        </div>
+        <div class="tp-field">
+          <label>边距(占图宽)<span class="val" id="wmMarginVal">3%</span></label>
+          <input type="range" id="wmMargin" min="0" max="30" value="3" />
+        </div>
+      </div>
+      <label class="tp-check"><input type="checkbox" id="wmTile" /> 平铺整张图(防截图盗用,最有效)</label>
+      <div class="pos-wrap">
+        <span class="pos-label">位置</span>
+        <div class="pos-grid" id="wmPosGrid">
+          <button type="button" class="pos-cell" data-pos="tl" title="左上"></button>
+          <button type="button" class="pos-cell" data-pos="tc" title="上中"></button>
+          <button type="button" class="pos-cell" data-pos="tr" title="右上"></button>
+          <button type="button" class="pos-cell" data-pos="ml" title="左中"></button>
+          <button type="button" class="pos-cell" data-pos="center" title="正中"></button>
+          <button type="button" class="pos-cell" data-pos="mr" title="右中"></button>
+          <button type="button" class="pos-cell" data-pos="bl" title="左下"></button>
+          <button type="button" class="pos-cell" data-pos="bc" title="下中"></button>
+          <button type="button" class="pos-cell active" data-pos="br" title="右下"></button>
         </div>
       </div>
       <button class="btn-primary" data-process="watermark">添加水印</button>
+    </section>
+
+    <!-- ============ 贴纸 ============ -->
+    <section class="tool-panel" data-panel="sticker" hidden>
+      <div class="tp-head"><h2>贴纸</h2><p>给图片贴标签 / 装饰 —— 电商卖家常用来做「包邮」「热卖」角标</p></div>
+
+      <div class="tp-field">
+        <label>选一个贴纸(点一下选中)</label>
+        <div class="sticker-grid" id="stickerGrid"></div>
+      </div>
+
+      <div class="tp-grid">
+        <div class="tp-field">
+          <label>或用自己上传的图片</label>
+          <input type="file" id="stickerImage" accept="image/*" />
+        </div>
+        <div class="tp-field">
+          <label>贴纸大小(占图宽)<span class="val" id="stickerScaleVal">20%</span></label>
+          <input type="range" id="stickerScale" min="3" max="100" value="20" />
+        </div>
+        <div class="tp-field">
+          <label>旋转角度 <span class="val" id="stickerAngleVal">0</span></label>
+          <input type="range" id="stickerAngle" min="-90" max="90" value="0" />
+        </div>
+        <div class="tp-field">
+          <label>不透明度 <span class="val" id="stickerOpacityVal">100%</span></label>
+          <input type="range" id="stickerOpacity" min="10" max="100" value="100" />
+        </div>
+        <div class="tp-field">
+          <label>边距(占图宽)<span class="val" id="stickerMarginVal">4%</span></label>
+          <input type="range" id="stickerMargin" min="0" max="30" value="4" />
+        </div>
+      </div>
+
+      <div class="pos-wrap">
+        <span class="pos-label">位置</span>
+        <div class="pos-grid" id="stickerPosGrid">
+          <button type="button" class="pos-cell" data-pos="tl"></button>
+          <button type="button" class="pos-cell" data-pos="tc"></button>
+          <button type="button" class="pos-cell" data-pos="tr"></button>
+          <button type="button" class="pos-cell" data-pos="ml"></button>
+          <button type="button" class="pos-cell" data-pos="center"></button>
+          <button type="button" class="pos-cell" data-pos="mr"></button>
+          <button type="button" class="pos-cell" data-pos="bl"></button>
+          <button type="button" class="pos-cell" data-pos="bc"></button>
+          <button type="button" class="pos-cell active" data-pos="br"></button>
+        </div>
+      </div>
+      <button class="btn-primary" data-process="sticker">贴上贴纸</button>
     </section>
 
     <!-- ============ 调整尺寸 ============ -->
