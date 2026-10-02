@@ -311,6 +311,77 @@ function showMsg(text, ok) {
 }
 
 // ============================================================
+// 轻量统计(自建,不依赖第三方)
+// 只记「来源」和「用了哪个工具」,不收集 IP、不写 Cookie、不存个人信息。
+// 限额提醒:Cloudflare KV 免费额度是 1000 次写/天,即每天最多记约 1000 个事件。
+// ============================================================
+function track(kind, tool) {
+  try {
+    let uv = false;
+    if (kind === 'pv') {
+      // 一次会话只算一个新访客,避免每次刷新都多记一个
+      uv = !sessionStorage.getItem('tqs_sess');
+      if (uv) sessionStorage.setItem('tqs_sess', '1');
+    }
+    const payload = JSON.stringify({
+      kind,
+      tool: tool || '',
+      ref: document.referrer || '',
+      uv,
+    });
+    // sendBeacon 在页面关闭时也能可靠送出;不支持时退回 fetch
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon('/api/track', new Blob([payload], { type: 'application/json' }));
+    } else {
+      fetch('/api/track', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: payload,
+        keepalive: true,
+      }).catch(() => {});
+    }
+  } catch (e) { /* 统计失败绝不影响正常使用 */ }
+}
+
+async function loadStats() {
+  const box = document.getElementById('statsBox');
+  if (!box) return;
+  box.innerHTML = '<p class="muted">加载中…</p>';
+  try {
+    const res = await fetch('/api/admin/stats', { headers: { Authorization: 'Bearer ' + state.token } });
+    const data = await res.json();
+    if (!data.ok) { box.innerHTML = '<p class="muted">' + esc(data.msg || '加载失败') + '</p>'; return; }
+    const t = data.total || { pv: 0, uv: 0 };
+    if (!t.pv) { box.innerHTML = '<p class="muted">还没有访问数据</p>'; return; }
+
+    const bars = (list, unit) => list.slice(0, 8).map((x) => {
+      const pct = Math.round((x.count / (list[0].count || 1)) * 100);
+      return `<div class="stat-row">
+        <span class="stat-name">${esc(x.name)}</span>
+        <span class="stat-bar"><i style="width:${pct}%"></i></span>
+        <span class="stat-num">${x.count}${unit}</span>
+      </div>`;
+    }).join('');
+
+    box.innerHTML = `
+      <div class="stat-total">
+        <div><b>${t.pv}</b><span>总浏览</span></div>
+        <div><b>${t.uv}</b><span>独立访客</span></div>
+        <div><b>${(data.days || []).length}</b><span>有数据天数</span></div>
+      </div>
+      ${data.refs.length ? `<h4 class="stat-h">访客来源</h4>${bars(data.refs, '')}` : ''}
+      ${data.tools.length ? `<h4 class="stat-h">工具使用</h4>${bars(data.tools, '')}` : ''}
+      ${(data.days || []).length ? `<h4 class="stat-h">最近几天</h4>${data.days.slice(0, 7).map((d) =>
+        `<div class="stat-row"><span class="stat-name">${esc(d.day)}</span><span class="stat-bar"><i style="width:${Math.round((d.pv / ((data.days[0] && data.days[0].pv) || 1)) * 100)}%"></i></span><span class="stat-num">${d.pv} 浏览 / ${d.uv} 人</span></div>`
+      ).join('')}` : ''}
+      <p class="stat-note">自建统计,用 Cloudflare KV 记录。不收集 IP、不写 Cookie。限额约 1000 次写/天。</p>
+    `;
+  } catch (e) {
+    box.innerHTML = '<p class="muted">网络错误</p>';
+  }
+}
+
+// ============================================================
 // 发码后台(仅管理员)
 // ============================================================
 function adminMsg(text, ok) {
@@ -1993,6 +2064,8 @@ document.addEventListener('keydown', (e) => {
 
 // 各工具「开始」按钮
 async function onProcess(process) {
+  // 只在真的点了处理按钮时记一次「工具使用」,比记录页面停留在哪个标签有意义
+  track('use', process);
   if (!state.files.length) { alert('请先选择图片'); return; }
   switch (process) {
     case 'compress': await processFiles(compressOne); break;
@@ -2062,8 +2135,23 @@ b64Download.addEventListener('click', () => {
   downloadImage(blob, '图轻松_Base64.txt');
 });
 
-// 发码后台(仅管理员)
-adminBtn.addEventListener('click', () => { adminModal.hidden = false; loadCodes(); });
+// 后台弹窗(仅管理员)
+function switchAdminTab(which) {
+  const isStats = which === 'stats';
+  document.getElementById('tabGen').classList.toggle('active', !isStats);
+  document.getElementById('tabStats').classList.toggle('active', isStats);
+  document.getElementById('paneGen').hidden = isStats;
+  document.getElementById('paneStats').hidden = !isStats;
+  if (isStats) loadStats();
+}
+document.getElementById('tabGen').addEventListener('click', () => switchAdminTab('gen'));
+document.getElementById('tabStats').addEventListener('click', () => switchAdminTab('stats'));
+
+adminBtn.addEventListener('click', () => {
+  adminModal.hidden = false;
+  switchAdminTab('gen');
+  loadCodes();
+});
 closeAdmin.addEventListener('click', () => { adminModal.hidden = true; });
 adminModal.addEventListener('click', (e) => { if (e.target === adminModal) adminModal.hidden = true; });
 genBtn.addEventListener('click', generateCodes);
@@ -2171,3 +2259,4 @@ updateRotateStatus();
 updateCropStatus();
 updateSplitRangeField();
 updatePdfwmFields();
+track('pv'); // 记一次页面浏览(含来源,用于判断哪个渠道有效)

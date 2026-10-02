@@ -607,16 +607,28 @@
   <div id="adminModal" class="modal" hidden>
     <div class="modal-box">
       <button class="modal-close" id="closeAdmin">×</button>
-      <h2>发码后台</h2>
-      <p class="modal-sub">生成感谢码发给支持者,一码一用,用过作废</p>
-      <div class="admin-gen">
-        <input type="number" id="genCount" value="1" min="1" max="50" />
-        <input type="text" id="genNote" placeholder="备注(如:张三 支持一年)" />
-        <button id="genBtn" class="btn-primary">生成感谢码</button>
+      <h2>管理后台</h2>
+      <div class="auth-tabs">
+        <button id="tabGen" class="auth-tab active">发码</button>
+        <button id="tabStats" class="auth-tab">访问统计</button>
       </div>
-      <div id="genResult" class="gen-result"></div>
-      <div id="codeList" class="code-list"></div>
-      <p id="adminMsg" class="activate-msg"></p>
+
+      <div id="paneGen">
+        <p class="modal-sub">生成感谢码发给支持者,一码一用,用过作废</p>
+        <div class="admin-gen">
+          <input type="number" id="genCount" value="1" min="1" max="50" />
+          <input type="text" id="genNote" placeholder="备注(如:张三 支持一年)" />
+          <button id="genBtn" class="btn-primary">生成感谢码</button>
+        </div>
+        <div id="genResult" class="gen-result"></div>
+        <div id="codeList" class="code-list"></div>
+        <p id="adminMsg" class="activate-msg"></p>
+      </div>
+
+      <div id="paneStats" hidden>
+        <p class="modal-sub">看看人是从哪来的、用了哪些工具 —— 用来判断哪个宣传渠道有效</p>
+        <div id="statsBox" class="stats-box"></div>
+      </div>
     </div>
   </div>
 
