@@ -493,6 +493,18 @@ function isPdfFile(f) {
   return f.type === 'application/pdf' || /\.pdf$/i.test(f.name || '');
 }
 
+// 判断是不是图片。**不能只看 MIME**:手机拍的照、微信保存的图、部分来源的文件
+// type 会是空字符串,只看 MIME 会把它们误判成「非图片」而拒收,用户就卡住了。
+const IMG_EXT = /\.(jpe?g|png|webp|gif|bmp|avif|jfif)$/i;
+const HEIC_EXT = /\.(heic|heif)$/i;
+
+function isHeicFile(f) { return HEIC_EXT.test(f.name || ''); }
+
+function isImageFile(f) {
+  if (isHeicFile(f)) return false; // 浏览器解不了 HEIC,单独给提示,不能默默收下再失败
+  return (f.type && f.type.startsWith('image/')) || IMG_EXT.test(f.name || '');
+}
+
 let pdfLibPromise = null;
 function loadPdfLib() {
   if (window.PDFLib) return Promise.resolve(window.PDFLib);
@@ -1163,16 +1175,29 @@ function buildPdf(pages) {
 async function topdfFiles() {
   if (!state.files.length) { alert('请先选择图片'); return; }
   const pages = [];
+  const failed = [];
   for (const f of state.files) {
     try {
       const img = await loadFile(f);
       const cv = safeCanvas(img);
       const jpeg = await canvasToBlob(cv, 'image/jpeg', 0.92);
-      if (!jpeg) continue;
+      if (!jpeg) { failed.push({ name: f.name, msg: '编码失败' }); continue; }
       pages.push({ data: new Uint8Array(await jpeg.arrayBuffer()), w: cv.width, h: cv.height });
-    } catch (e) { console.error('转PDF失败:', f.name, e); }
+    } catch (e) {
+      console.error('转PDF失败:', f.name, e);
+      failed.push({ name: f.name, msg: '无法读取图片(格式不支持或文件损坏)' });
+    }
   }
-  if (!pages.length) { alert('没有可转换的图片'); return; }
+  if (!pages.length) {
+    alert(failed.length ? `所有图片都无法读取:\n${failed[0].msg}` : '没有可转换的图片');
+    return;
+  }
+  if (failed.length) {
+    clearResults();
+    results.hidden = false;
+    countEl.textContent = `已生成 ${pages.length} 页`;
+    renderFailures(failed);
+  }
   const pdf = buildPdf(pages);
   downloadImage(pdf, '图轻松_图片转PDF.pdf');
 }
@@ -1678,6 +1703,7 @@ async function processFiles(fn) {
   clearResults();
   results.hidden = false;
   countEl.textContent = `共 ${state.files.length} 张`;
+  const failed = [];
   for (let i = 0; i < state.files.length; i++) {
     try {
       const blob = await fn(state.files[i], i);
@@ -1685,10 +1711,25 @@ async function processFiles(fn) {
       renderResult(item);
       processedItems.push({ name: outNameFor(item), blob });
     } catch (err) {
+      // 只写 console 的话用户什么都看不到 —— 点了按钮像没反应一样。
+      // 必须把失败原因显示在页面上。
       console.error('处理失败:', state.files[i].name, err);
+      failed.push({ name: state.files[i].name, msg: (err && err.message) || '未知错误' });
     }
   }
+  if (failed.length) renderFailures(failed);
   updateZipBtn();
+}
+
+// 处理失败的结果条:让用户知道哪些文件失败了、为什么
+function renderFailures(list) {
+  const div = document.createElement('div');
+  div.className = 'fail-box';
+  div.innerHTML = `<b>有 ${list.length} 个文件处理失败:</b>` +
+    list.slice(0, 6).map((f) => `<div class="fail-row">${esc(f.name)} —— ${esc(f.msg)}</div>`).join('') +
+    (list.length > 6 ? `<div class="fail-row">…还有 ${list.length - 6} 个</div>` : '') +
+    `<div class="fail-hint">常见原因:图片格式浏览器不支持(如 HEIC)、文件已损坏、图片过大超出内存。</div>`;
+  results.insertBefore(div, resultList);
 }
 
 // 单结果(拼图等):渲染一个结果项
@@ -2143,16 +2184,22 @@ pagesInsert.addEventListener('click', () => {
 function handleFiles(fileList) {
   const wantPdf = isPdfTool(state.view);
   const incoming = Array.from(fileList);
-  const files = incoming.filter((f) => (wantPdf ? isPdfFile(f) : f.type.startsWith('image/')));
+  const files = incoming.filter((f) => (wantPdf ? isPdfFile(f) : isImageFile(f)));
 
   if (!files.length) {
-    alert(wantPdf ? '请选择 PDF 文件' : '请选择图片文件');
+    if (!wantPdf && incoming.some(isHeicFile)) {
+      alert('iPhone 拍的 HEIC 格式浏览器无法直接处理。\n请先在手机「设置 → 相机 → 格式」里选「兼容性最佳」重拍,或把图片导出成 JPG 再试。');
+    } else {
+      alert(wantPdf ? '请选择 PDF 文件' : '请选择图片文件');
+    }
     return;
   }
   if (files.length < incoming.length) {
-    alert(wantPdf
-      ? '已忽略非 PDF 文件,本工具只处理 PDF'
-      : '已忽略非图片文件,本工具只处理图片');
+    const skipped = incoming.filter((f) => !(wantPdf ? isPdfFile(f) : isImageFile(f)));
+    const why = skipped.some(isHeicFile)
+      ? 'HEIC 格式(iPhone)浏览器无法处理,请先转成 JPG'
+      : (wantPdf ? '本工具只处理 PDF' : '本工具只处理图片');
+    alert(`已忽略 ${skipped.length} 个文件:${why}`);
   }
 
   if (!state.premium && (files.length > 1 || state.files.length + files.length > 1)) {
@@ -2316,6 +2363,17 @@ async function onProcess(process) {
   // 只在真的点了处理按钮时记一次「工具使用」,比记录页面停留在哪个标签有意义
   track('use', process);
   if (!state.files.length) { alert('请先选择图片'); return; }
+  try {
+    await runProcess(process);
+  } catch (err) {
+    // onProcess 是 async 且由点击触发,没有这层兜底的话异常会变成
+    // 「点了按钮毫无反应」—— 用户完全不知道发生了什么
+    console.error('处理出错:', process, err);
+    alert('处理失败:' + ((err && err.message) || '未知错误'));
+  }
+}
+
+async function runProcess(process) {
   switch (process) {
     case 'compress': await processFiles(compressOne); break;
     case 'convert': await processFiles(convertOne); break;
