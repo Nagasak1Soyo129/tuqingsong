@@ -954,6 +954,27 @@ select:focus, input[type="text"]:focus, input[type="password"]:focus, input[type
 .stat-num { flex: 0 0 auto; color: var(--muted); font-size: 12px; white-space: nowrap; }
 .stat-note { margin-top: 18px; font-size: 12px; color: var(--muted); line-height: 1.7; }
 
+/* A/B 对比表 */
+.ab-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.ab-table th, .ab-table td {
+  padding: 8px 6px;
+  text-align: right;
+  border-bottom: 1px solid var(--border-2);
+}
+.ab-table th:first-child, .ab-table td:first-child { text-align: left; }
+.ab-table thead th {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border);
+}
+.ab-table tbody tr:hover { background: rgba(47, 107, 255, 0.04); }
+.ab-table td:nth-child(4), .ab-table td:nth-child(6) { font-weight: 700; color: var(--accent); }
+
 /* 裁剪弹窗 */
 .crop-box { max-width: 760px; }
 #cropCanvas {
