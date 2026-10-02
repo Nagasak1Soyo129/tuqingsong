@@ -55,8 +55,6 @@ export async function onRequestPost(context) {
   await env.USERS.put('order:' + tradeOrderId, JSON.stringify({
     tradeOrderId,
     username: auth.user.username,
-    // A/B 分组:用来算两组各自的转化与收入(前端带上来,缺失不影响下单)
-    bucket: (body.bucket === 'a' || body.bucket === 'b') ? body.bucket : '',
     plan: body.plan,
     fee: plan.fee,
     days: plan.days,

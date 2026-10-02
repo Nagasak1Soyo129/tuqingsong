@@ -17,18 +17,6 @@ const state = {
   flipV: false,
   crop: null,                                                  // { nx, ny, nw, nh } 归一化(0~1)
   filter: { bright: 0, contrast: 100, saturate: 100, gray: false, sepia: false, invert: false },
-  // A/B 测试:访客被随机分到 a 组(软性支持)或 b 组(硬性会员)
-  bucket: '',                                                  // 'a' | 'b'
-  mode: 'soft',                                                // 'soft' | 'hard'
-  modeCfg: null,                                               // 由 /api/config 下发的模式配置
-};
-
-// 兜底配置:万一 /api/config 请求失败,也要能正常用(按软性模式跑)
-const FALLBACK_CFG = {
-  label: '支持者', cta: '请支持我们', ctaDone: '感谢支持',
-  qualityCap: 0.8, fileLimit: 1, locked: ['collage', 'pdfmerge'],
-  pitch: '图轻松一直免费、无广告、图片不上传服务器。如果它帮到了你,欢迎请我们喝杯咖啡。',
-  note: '支持后,以下功能会一并解锁 —— 算是我们的一点谢意',
 };
 
 // ---- DOM 引用 ----
@@ -94,12 +82,18 @@ const filterReset = $('#filterReset');
 // 拼图
 const collageLayout = $('#collageLayout');
 const collageGap = $('#collageGap');
+const collageLock = $('#collageLock');
+const collageUpgrade = $('#collageUpgrade');
 // PDF 合并 / 拆分
 const mergeName = $('#mergeName');
+const pdfmergeLock = $('#pdfmergeLock');
+const pdfmergeUpgrade = $('#pdfmergeUpgrade');
 const splitInfo = $('#splitInfo');
 const splitMode = $('#splitMode');
 const splitRange = $('#splitRange');
 const splitRangeField = $('#splitRangeField');
+const pdfsplitLock = $('#pdfsplitLock');
+const pdfsplitUpgrade = $('#pdfsplitUpgrade');
 // PDF 水印
 const pdfwmType = $('#pdfwmType');
 const pdfwmTextField = $('#pdfwmTextField');
@@ -201,42 +195,20 @@ function isAdmin() {
 }
 function refreshAuthUI() {
   state.premium = isPremium();
-  const cfg = state.modeCfg || FALLBACK_CFG;
   const u = state.user;
   if (u) {
     if (u.admin) accountBtn.textContent = `👑 ${u.username}`;
-    else if (u.premium) accountBtn.textContent = `👤 ${u.username} · ${cfg.label}`;
+    else if (u.premium) accountBtn.textContent = `👤 ${u.username} · 支持者`;
     else accountBtn.textContent = `👤 ${u.username}`;
-    upgradeBtn.textContent = u.premium ? cfg.ctaDone : cfg.cta;
+    upgradeBtn.textContent = u.premium ? '感谢支持' : '请支持我们';
     upgradeBtn.style.background = u.premium ? 'linear-gradient(135deg, var(--ok), #2bb673)' : '';
   } else {
     accountBtn.textContent = '登录';
-    upgradeBtn.textContent = cfg.cta;
+    upgradeBtn.textContent = '请支持我们';
     upgradeBtn.style.background = '';
   }
   adminBtn.hidden = !isAdmin();
-  updateLockBanners();
-  applyModeText();
-}
-
-// 按当前 A/B 模式刷新界面上的文案
-function applyModeText() {
-  const cfg = state.modeCfg || FALLBACK_CFG;
-  const pitch = document.getElementById('modalPitch');
-  if (pitch) pitch.textContent = cfg.pitch;
-  const note = document.getElementById('supportNote');
-  if (note) note.innerHTML = `${esc(cfg.note)}:<br /><b>批量处理 · 高清原画质输出 · 拼图 · PDF 合并</b>`;
-}
-
-// 当前模式下,这个工具是否对免费用户锁住
-function isToolLocked(view) {
-  if (state.premium) return false;
-  const cfg = state.modeCfg || FALLBACK_CFG;
-  return (cfg.locked || []).includes(view);
-}
-function freeFileLimit() {
-  const cfg = state.modeCfg || FALLBACK_CFG;
-  return cfg.fileLimit || 1;
+  updateCollageLock();
 }
 
 function setAuthMode(mode) {
@@ -356,7 +328,6 @@ function track(kind, tool) {
       tool: tool || '',
       ref: document.referrer || '',
       uv,
-      bucket: state.bucket,
     });
     // sendBeacon 在页面关闭时也能可靠送出;不支持时退回 fetch
     if (navigator.sendBeacon) {
@@ -392,28 +363,6 @@ async function loadStats() {
       </div>`;
     }).join('');
 
-    // A/B 对比区
-    let abHtml = '';
-    if (data.ab && data.ab.some((r) => r.visits)) {
-      const rows = data.ab.map((r) => `
-        <tr>
-          <td>${esc(r.name)}</td>
-          <td>${r.visits}</td>
-          <td>${r.orders}</td>
-          <td>${r.conv}%</td>
-          <td>¥${r.revenue.toFixed(2)}</td>
-          <td>¥${r.arpu}</td>
-        </tr>`).join('');
-      abHtml = `
-        <h4 class="stat-h">A/B 对比(哪种变现模式更有效)</h4>
-        <table class="ab-table">
-          <thead><tr><th>分组</th><th>访客</th><th>付费</th><th>转化率</th><th>收入</th><th>人均</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-        <p class="stat-note">两组共 ${data.ab.reduce((n, r) => n + r.visits, 0)} 个访客。
-        <b>样本太小时任何差异都不可信</b> —— 要判断「1% vs 3%」这种差异,每组至少需要几百人。</p>`;
-    }
-
     box.innerHTML = `
       <div class="stat-total">
         <div><b>${t.pv}</b><span>总浏览</span></div>
@@ -422,7 +371,6 @@ async function loadStats() {
       </div>
       ${data.refs.length ? `<h4 class="stat-h">访客来源</h4>${bars(data.refs, '')}` : ''}
       ${data.tools.length ? `<h4 class="stat-h">工具使用</h4>${bars(data.tools, '')}` : ''}
-      ${abHtml}
       ${(data.days || []).length ? `<h4 class="stat-h">最近几天</h4>${data.days.slice(0, 7).map((d) =>
         `<div class="stat-row"><span class="stat-name">${esc(d.day)}</span><span class="stat-bar"><i style="width:${Math.round((d.pv / ((data.days[0] && data.days[0].pv) || 1)) * 100)}%"></i></span><span class="stat-num">${d.pv} 浏览 / ${d.uv} 人</span></div>`
       ).join('')}` : ''}
@@ -693,11 +641,9 @@ function outMime(file) {
   return (t === 'image/png' || t === 'image/jpeg' || t === 'image/webp') ? t : 'image/jpeg';
 }
 
-// 免费版质量上限(A/B 两种模式不同);付费后一律 100%
+// 免费版质量上限;支持者 100%
 function qualityCap() {
-  if (state.premium) return 1;
-  const cfg = state.modeCfg || FALLBACK_CFG;
-  return cfg.qualityCap || 0.8;
+  return state.premium ? 1 : 0.8;
 }
 
 // 裁剪:rect 为归一化坐标(0~1),基于当前 canvas 尺寸换算
@@ -842,7 +788,7 @@ async function compressOne(file) {
     blob = await findQualityForTarget(cv, mime, kb * 1024, qualityCap());
   } else {
     let q = parseInt(quality.value, 10) / 100;
-    if (!state.premium) q = Math.min(q, qualityCap());
+    if (!state.premium) q = Math.min(q, 0.8);
     blob = await canvasToBlob(cv, mime, q);
   }
   if (!blob) throw new Error('生成图片失败');
@@ -858,7 +804,7 @@ async function convertOne(file) {
     blob = await canvasToBlob(cv, mime);
   } else {
     let q = parseInt(convertQuality.value, 10) / 100;
-    if (!state.premium) q = Math.min(q, qualityCap());
+    if (!state.premium) q = Math.min(q, 0.8);
     blob = await canvasToBlob(cv, mime, q);
   }
   if (!blob) throw new Error('生成图片失败');
@@ -939,7 +885,7 @@ function composeCollage(imgs, layout, gap) {
 }
 
 async function collageFiles() {
-  if (isToolLocked('collage')) { showUpgrade(); return; }
+  if (!state.premium) { alert('拼图需要一次处理多张图片。如果图轻松帮到了你,欢迎支持我们解锁'); upgradeModal.hidden = false; return; }
   if (state.files.length < 2) { alert('拼图需要至少 2 张图片'); return; }
   const layout = collageLayout.value;
   const gap = parseInt(collageGap.value, 10) || 0;
@@ -1039,7 +985,7 @@ async function tobase64Files() {
 
 // ---- PDF 合并 ----
 async function mergePdfs() {
-  if (isToolLocked('pdfmerge')) { showUpgrade(); return; }
+  if (!state.premium) { alert('PDF 合并需要一次处理多个文件。如果图轻松帮到了你,欢迎支持我们解锁'); upgradeModal.hidden = false; return; }
   if (state.files.length < 2) { alert('合并至少需要 2 个 PDF 文件'); return; }
 
   const btn = document.querySelector('[data-process="pdfmerge"]');
@@ -1105,7 +1051,8 @@ async function splitPdf() {
   if (!state.files.length) { alert('请先选择一个 PDF'); return; }
   const mode = splitMode.value;
   if (mode === 'each' && !state.premium) {
-    showUpgrade();
+    alert('「每页拆成单独 PDF」会一次输出很多文件。欢迎支持我们解锁');
+    upgradeModal.hidden = false;
     return;
   }
   const btn = document.querySelector('[data-process="pdfsplit"]');
@@ -1874,7 +1821,6 @@ function switchTool(view) {
   }
 
   renderFileBar();
-  updateLockBanners();
   refreshPdfPanels();
 }
 
@@ -1882,25 +1828,19 @@ document.querySelectorAll('.tool-tab').forEach((tab) => {
   tab.addEventListener('click', () => switchTool(tab.dataset.view));
 });
 
-// 统一的锁定提示:当前模式的 locked 列表里有什么,对应面板就显示什么
-function showUpgrade() {
-  const cfg = state.modeCfg || FALLBACK_CFG;
-  alert(cfg.pitch);
-  upgradeModal.hidden = false;
+function updateCollageLock() {
+  collageLock.hidden = state.premium;
 }
+collageUpgrade.addEventListener('click', () => { upgradeModal.hidden = false; });
 
-function updateLockBanners() {
-  document.querySelectorAll('.tool-panel').forEach((panel) => {
-    const old = panel.querySelector('.mode-lock');
-    if (old) old.remove();
-    if (!isToolLocked(panel.dataset.panel)) return;
-    const b = document.createElement('p');
-    b.className = 'tp-lock mode-lock';
-    b.innerHTML = '🔒 这个工具需要升级后使用 —— <a class="link-upgrade">升级解锁</a>';
-    b.querySelector('a').addEventListener('click', showUpgrade);
-    panel.appendChild(b);
-  });
+// PDF 工具的门控提示
+function updateProcessLocks() {
+  if (!pdfmergeLock) return;
+  pdfmergeLock.hidden = state.premium;
+  pdfsplitLock.hidden = state.premium;
 }
+pdfmergeUpgrade.addEventListener('click', () => { upgradeModal.hidden = false; });
+pdfsplitUpgrade.addEventListener('click', () => { upgradeModal.hidden = false; });
 
 // 拆分方式切换:只有「提取指定页」需要填页码范围
 function updateSplitRangeField() {
@@ -1966,11 +1906,10 @@ function handleFiles(fileList) {
       : '已忽略非图片文件,本工具只处理图片');
   }
 
-  const limit = freeFileLimit();
-  if (!state.premium && (files.length > limit || state.files.length + files.length > limit)) {
-    alert((state.modeCfg || FALLBACK_CFG).pitch);
-    files.length = limit;
-    if (state.files.length >= limit) files.length = 0;
+  if (!state.premium && (files.length > 1 || state.files.length + files.length > 1)) {
+    alert('免费版一次处理 1 个文件。批量处理是我们对支持者的一点谢意,欢迎支持我们');
+    files.length = 1;
+    if (state.files.length >= 1) files.length = 0;
   }
   if (!files.length) return;
 
@@ -1996,7 +1935,7 @@ function renderFileBar() {
   fileBar.hidden = n === 0;
   revokeThumbs();
   thumbList.innerHTML = '';
-  updateLockBanners();
+  updateProcessLocks();
   if (!n) {
     fileCount.textContent = '';
     return;
@@ -2125,8 +2064,6 @@ document.addEventListener('keydown', (e) => {
 
 // 各工具「开始」按钮
 async function onProcess(process) {
-  // 当前模式下这个工具被锁 → 直接引导升级,不继续
-  if (isToolLocked(process)) { showUpgrade(); return; }
   // 只在真的点了处理按钮时记一次「工具使用」,比记录页面停留在哪个标签有意义
   track('use', process);
   if (!state.files.length) { alert('请先选择图片'); return; }
@@ -2278,7 +2215,7 @@ async function startPayment(plan) {
     const res = await fetch('/api/pay/order', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + state.token },
-      body: JSON.stringify({ plan, bucket: state.bucket }),
+      body: JSON.stringify({ plan }),
     });
     const data = await res.json();
     if (data.ok && data.url) {
@@ -2316,27 +2253,8 @@ async function initAuth() {
   refreshAuthUI();
 }
 
-// 先拿 A/B 配置(决定模式与文案),再初始化账号
-async function initMode() {
-  try {
-    const res = await fetch('/api/config');
-    const data = await res.json();
-    if (data.ok) {
-      state.bucket = data.bucket || '';
-      state.mode = data.mode || 'soft';
-      state.modeCfg = (data.modes && data.modes[state.mode]) || FALLBACK_CFG;
-    }
-  } catch (e) { /* 拿不到就用兜底配置,不影响使用 */ }
-  if (!state.modeCfg) state.modeCfg = FALLBACK_CFG;
-}
-
-async function boot() {
-  await initMode();
-  await initAuth();
-  switchTool('compress');
-  updateLockBanners();
-}
-boot();
+initAuth();
+switchTool('compress');
 updateRotateStatus();
 updateCropStatus();
 updateSplitRangeField();
