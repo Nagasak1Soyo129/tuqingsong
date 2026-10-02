@@ -2033,6 +2033,7 @@ function switchTool(view) {
     dropHint.textContent = '支持 JPG / PNG / WebP,可多选';
   }
 
+  if (view === 'sticker') ensureStickerGrid();
   renderFileBar();
   refreshPdfPanels();
 }
@@ -2076,7 +2077,14 @@ wmType.addEventListener('change', updateWmFields);
 // 九宫格 + 贴纸库初始化
 bindPosGrid(wmPosGrid);
 bindPosGrid(stickerPosGrid);
-buildStickerGrid();
+// 贴纸库不在这里生成:20 张贴纸要建 20 个 canvas + 20 次 toDataURL,
+// 而多数访客根本不会打开贴纸工具。改成第一次切到该工具时才建。
+let stickerBuilt = false;
+function ensureStickerGrid() {
+  if (stickerBuilt) return;
+  stickerBuilt = true;
+  buildStickerGrid();
+}
 
 function updatePdfwmFields() {
   const isText = pdfwmType.value === 'text';
