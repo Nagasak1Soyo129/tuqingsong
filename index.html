@@ -103,6 +103,12 @@
   </nav>
 
   <main>
+    <!-- 到期提醒(临近到期或刚过期时显示) -->
+    <div id="renewBar" class="renew-bar" hidden>
+      <span id="renewText"></span>
+      <button id="renewBtn" class="btn-primary">一键续费</button>
+    </div>
+
     <section class="hero">
       <h1>图片处理,<span class="grad">拖进来就好</span></h1>
       <p class="sub">纯浏览器本地处理,<strong>图片不上传服务器</strong>,隐私安全、秒级出图</p>
@@ -632,27 +638,31 @@
       <p class="modal-sub">图轻松一直<strong>免费、无广告、图片不上传服务器</strong>。如果它帮到了你,欢迎请我们喝杯咖啡。</p>
 
       <div class="plans">
-        <div class="plan">
-          <div class="plan-name">支持一个月</div>
-          <div class="plan-price">¥9.9<span>/月</span></div>
-          <button class="btn-plan" data-plan="month">支持</button>
+        <div class="plan hot">
+          <div class="plan-name">包月 <span class="plan-note">到期提醒,一键续</span></div>
+          <div class="plan-price">¥5.5<span>/月</span></div>
+          <button class="btn-plan" data-plan="month5">支持</button>
         </div>
         <div class="plan">
-          <div class="plan-name">支持三个月</div>
-          <div class="plan-price">¥16.6<span>/季</span></div>
-          <button class="btn-plan" data-plan="quarter">支持</button>
+          <div class="plan-name">单月 <span class="plan-note">用一个月就走</span></div>
+          <div class="plan-price">¥9.9<span>/月</span></div>
+          <button class="btn-plan" data-plan="month">支持</button>
         </div>
         <div class="plan">
           <div class="plan-name">支持半年</div>
           <div class="plan-price">¥24.4<span>/半年</span></div>
           <button class="btn-plan" data-plan="halfyear">支持</button>
         </div>
-        <div class="plan hot">
-          <div class="plan-name">支持一年</div>
+        <div class="plan">
+          <div class="plan-name">支持一年 <span class="plan-note">最划算</span></div>
           <div class="plan-price">¥36.6<span>/年</span></div>
           <button class="btn-plan" data-plan="year">支持</button>
         </div>
       </div>
+
+      <p class="plans-why">
+        包月便宜是因为默认你会一直用下去 —— 到期前我们会提醒你,点一下就能续。
+      </p>
 
       <p class="support-note">支持后,以下功能会一并解锁 —— 算是我们的一点谢意:<br /><b>批量处理 · 高清原画质输出 · 拼图 · PDF 合并</b></p>
 

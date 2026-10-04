@@ -10,8 +10,14 @@ import { json, getUserByToken, randomHex } from '../../_lib/auth';
 import { sign, nonceStr } from '../../_lib/xunhu';
 
 // title 会显示在支付平台的账单上,刻意用「支持」的说法,弱化商业感
+//
+// 说明:虎皮椒是聚合支付,只做一次性收款,**不支持委托代扣**,
+// 所以这里所有档位都是「一次性付 N 天」,没有真正的自动续费。
+// 包月(month5)与单月(month)天数相同、只是价格不同 —— 前者靠到期提醒+一键续费
+// 来近似「连续包月」的体验,不靠自动扣款。
 const PLANS = {
-  month:    { title: '图轻松 支持1个月', fee: '9.90',  days: 30 },
+  month5:   { title: '图轻松 包月',     fee: '5.50',  days: 30 },
+  month:    { title: '图轻松 单月',     fee: '9.90',  days: 30 },
   quarter:  { title: '图轻松 支持3个月', fee: '16.60', days: 90 },
   halfyear: { title: '图轻松 支持6个月', fee: '24.40', days: 180 },
   year:     { title: '图轻松 支持1年',   fee: '36.60', days: 365 },

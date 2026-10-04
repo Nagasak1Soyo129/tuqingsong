@@ -178,6 +178,9 @@ const b64Copy = $('#b64Copy');
 const b64Download = $('#b64Download');
 const b64Len = $('#b64Len');
 
+const renewBar = $('#renewBar');
+const renewText = $('#renewText');
+const renewBtn = $('#renewBtn');
 const accountBtn = $('#accountBtn');
 const upgradeBtn = $('#upgradeBtn');
 const upgradeModal = $('#upgradeModal');
@@ -241,6 +244,34 @@ function refreshAuthUI() {
   }
   adminBtn.hidden = !isAdmin();
   updateCollageLock();
+  updateRenewBar();
+}
+
+// 到期提醒:替代自动续费。
+// 虎皮椒不支持委托代扣,没法自动扣款,那就至少在快到期的主动提醒一次,
+// 并给一个「一键续费」直接跳到支持弹窗 —— 尽量接近连续包月的体验。
+const RENEW_WARN_DAYS = 7;
+function updateRenewBar() {
+  if (!renewBar) return;
+  const u = state.user;
+  // 长期支持者(premium === true)没有到期时间,不提醒
+  if (!u || !u.premiumUntil) { renewBar.hidden = true; return; }
+
+  const left = u.premiumUntil - Date.now();
+  const days = Math.ceil(left / 86400000);
+
+  if (left <= 0) {
+    renewBar.className = 'renew-bar warn';
+    renewText.innerHTML = '你的支持已经到期了,<b>批量处理、高清输出、拼图</b>等功能已暂停。';
+    renewBar.hidden = false;
+  } else if (days <= RENEW_WARN_DAYS) {
+    // 只是快到期,用普通样式就好 —— 还有好几天就弹黄色警告太吓人
+    renewBar.className = 'renew-bar';
+    renewText.innerHTML = `你的支持还有 <b>${days} 天</b>到期,续一下就不中断。`;
+    renewBar.hidden = false;
+  } else {
+    renewBar.hidden = true;
+  }
 }
 
 function setAuthMode(mode) {
@@ -2682,6 +2713,15 @@ adminBtn.addEventListener('click', () => {
 closeAdmin.addEventListener('click', () => { adminModal.hidden = true; });
 adminModal.addEventListener('click', (e) => { if (e.target === adminModal) adminModal.hidden = true; });
 genBtn.addEventListener('click', generateCodes);
+
+// 一键续费:直接打开支持弹窗,省得用户自己找入口
+if (renewBtn) {
+  renewBtn.addEventListener('click', () => {
+    upgradeModal.hidden = false;
+    const msg = document.getElementById('activateMsg');
+    if (msg) { msg.textContent = ''; msg.className = 'activate-msg'; }
+  });
+}
 
 // ============================================================
 // 在线支付(虎皮椒):点支持档位 → 创建订单 → 跳转扫码 → 回调自动解锁
