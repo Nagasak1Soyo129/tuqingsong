@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PDF 页面管理 - 删除、旋转、调序、插入空白页,免费在线</title>
+<meta name="description" content="免费在线 PDF 页面管理工具。删除不需要的页、旋转方向错误的扫描页、调整页序、插入空白页,操作直观。文件不上传服务器。" />
+<meta name="keywords" content="PDF删除页面,pdf旋转页面,pdf调整页序,pdf插入空白页,pdf页面管理,pdf重新排序" />
+<meta name="robots" content="index,follow" />
+<meta name="theme-color" content="#2f6bff" />
+<link rel="canonical" href="https://tuqingsong.pages.dev/t/pdf-organize.html" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="图轻松" />
+<meta property="og:title" content="PDF 页面管理 - 删除、旋转、调序、插入空白页,免费在线" />
+<meta property="og:description" content="免费在线 PDF 页面管理工具。删除不需要的页、旋转方向错误的扫描页、调整页序、插入空白页,操作直观。文件不上传服务器。" />
+<meta property="og:url" content="https://tuqingsong.pages.dev/t/pdf-organize.html" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"PDF 页面管理","url":"https://tuqingsong.pages.dev/t/pdf-organize.html","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"免费在线 PDF 页面管理工具。删除不需要的页、旋转方向错误的扫描页、调整页序、插入空白页,操作直观。文件不上传服务器。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"删错了能恢复吗?","acceptedAnswer":{"@type":"Answer","text":"能。删除只是标记,再点一次即可恢复,保存之前都不会真正生效。"}},{"@type":"Question","name":"旋转会损失画质吗?","acceptedAnswer":{"@type":"Answer","text":"不会。旋转是修改页面的显示参数,不重新渲染内容。"}},{"@type":"Question","name":"文件会被上传吗?","acceptedAnswer":{"@type":"Answer","text":"不会,全程在浏览器本地完成。"}}]}</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+background:radial-gradient(900px 500px at 15% -10%,rgba(47,107,255,.07),transparent 60%),#f4f7fc;
+color:#16233f;line-height:1.85;padding:0 0 60px}
+header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(15,23,42,.06);
+padding:14px 22px;position:sticky;top:0;z-index:9}
+header a{color:#16233f;text-decoration:none;font-weight:800;font-size:17px}
+header a::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+background:linear-gradient(135deg,#2f6bff,#5b8cff);margin-right:8px;vertical-align:1px}
+main{max-width:760px;margin:0 auto;padding:34px 20px}
+h1{font-size:27px;line-height:1.4;margin-bottom:14px;letter-spacing:-.3px}
+.lead{font-size:16px;color:#455468;margin-bottom:22px}
+.cta{display:inline-block;background:linear-gradient(135deg,#2f6bff,#5b8cff);color:#fff;text-decoration:none;
+padding:13px 30px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 8px 22px rgba(47,107,255,.28);
+margin:6px 0 8px;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta-note{font-size:13px;color:#6b7a94;margin-bottom:30px}
+h2{font-size:19px;margin:30px 0 10px;padding-left:11px;border-left:4px solid #2f6bff}
+h3{font-size:15px;margin:18px 0 6px;color:#2f6bff}
+p{margin:10px 0;color:#2c3a52}
+ol,ul{padding-left:22px;margin:10px 0}
+li{margin:7px 0;color:#2c3a52}
+.steps{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:18px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.steps li{margin:9px 0}
+.faq{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:6px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.faq dt{font-weight:700;margin:16px 0 4px}
+.faq dd{color:#455468;margin-bottom:16px;font-size:14px}
+.privacy{background:linear-gradient(135deg,rgba(47,107,255,.06),rgba(0,180,216,.06));
+border:1px solid rgba(47,107,255,.18);border-radius:14px;padding:16px 20px;margin:26px 0;font-size:14px}
+.privacy b{color:#2f6bff}
+.others{margin-top:36px;padding-top:22px;border-top:1px solid #e2e8f2}
+.others h2{border:none;padding:0;font-size:15px;color:#6b7a94;margin-bottom:12px}
+.others a{display:inline-block;background:#fff;border:1px solid #e2e8f2;border-radius:9px;
+padding:7px 14px;margin:0 8px 8px 0;color:#2c3a52;text-decoration:none;font-size:13px;transition:.15s}
+.others a:hover{border-color:#2f6bff;color:#2f6bff}
+footer{max-width:760px;margin:40px auto 0;padding:20px;color:#6b7a94;font-size:12.5px;text-align:center;
+border-top:1px solid #e2e8f2}
+@media(max-width:600px){h1{font-size:22px}main{padding:24px 16px}}
+</style>
+</head>
+<body>
+<header><a href="/">图轻松</a></header>
+<main>
+  <h1>PDF 页面管理</h1>
+  <p class="lead">删页、转正、调序、插空白页 —— 在一块面板里一次做完。</p>
+  <a class="cta" href="/?tool=pdfpages">免费使用 →</a>
+  <p class="cta-note">不用注册,不用安装,打开就能用。</p>
+
+  <h2>解决什么问题</h2>
+  <p>扫描件方向反了要转正;合并进来的文件里混了几页无关内容要删掉;打印双面需要插一张空白页;整理材料时发现顺序不对要重排。这些操作单独去做都要装软件,合在一起又很零碎。</p>
+  <h2>误删可恢复</h2>
+  <p>每一页卡片上都有删除按钮,删掉的页会变成半透明并划掉,而不是直接消失 —— 点一下就能恢复。全部整理完再保存,不会因为误操作前功尽弃。</p>
+  <h2>保存为一个新文件</h2>
+  <p>所有调整(删除、旋转、排序、插入空白页)会在保存时一次性生成新 PDF,原文件不受影响。</p>
+  <h2>扫描件方向出错很常见</h2>
+  <p>用扫描仪或手机翻拍时,方向问题几乎每次都会遇到:双面扫描时背面整页是倒的、手机拍的时候横竖不定、或者整本扫完才发现前几页方向不一致。逐页转正是这里用得最多的操作。</p>
+
+  <h2>怎么用</h2>
+  <div class="steps"><ol>
+    <li>拖入 PDF</li>
+    <li>页面列表里逐页操作:旋转 ⟳、删除 🗑、用 ▲▼ 调序</li>
+    <li>需要时点「末尾插入空白页」</li>
+    <li>确认无误后点「保存为新 PDF」</li>
+  </ol></div>
+
+  <div class="privacy">
+    <b>文件不上传服务器。</b>这个页面对应的功能全部在你的浏览器里完成,文件不会发送到任何服务器,
+    断网也能用。你可以打开浏览器开发者工具的 Network 面板自己验证。
+  </div>
+
+  <h2>常见问题</h2>
+  <dl class="faq">
+    <dt>删错了能恢复吗?</dt>
+    <dd>能。删除只是标记,再点一次即可恢复,保存之前都不会真正生效。</dd>
+    <dt>旋转会损失画质吗?</dt>
+    <dd>不会。旋转是修改页面的显示参数,不重新渲染内容。</dd>
+    <dt>文件会被上传吗?</dt>
+    <dd>不会,全程在浏览器本地完成。</dd>
+  </dl>
+
+  <a class="cta" href="/?tool=pdfpages">免费使用 PDF 页面管理 →</a>
+
+  <div class="others">
+    <h2>其他工具</h2>
+    <a href="/t/image-compress.html">图片压缩</a>
+    <a href="/t/remove-exif.html">照片隐私清除</a>
+    <a href="/t/pdf-merge.html">PDF 合并</a>
+    <a href="/t/pdf-split.html">PDF 拆分</a>
+    <a href="/t/pdf-watermark.html">PDF 加水印</a>
+    <a href="/t/image-to-pdf.html">图片转 PDF</a>
+    <a href="/t/image-watermark.html">图片加水印</a>
+    <a href="/t/pdf-stamp.html">PDF 盖章</a>
+    <a href="/t/pdf-page-number.html">PDF 加页码</a>
+    <a href="/t/image-resize.html">图片改尺寸</a>
+    <a href="/t/image-convert.html">图片格式转换</a>
+    <a href="/t/image-crop.html">图片裁剪</a>
+    <a href="/">全部 18 个工具</a>
+  </div>
+</main>
+<footer>图轻松 · 图片与 PDF 工具,全部在浏览器本地处理,文件不上传服务器</footer>
+</body>
+</html>

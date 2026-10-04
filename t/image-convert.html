@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>图片格式转换 - JPG / PNG / WebP 互转,免费在线</title>
+<meta name="description" content="免费在线图片格式转换工具。JPG、PNG、WebP 之间互相转换,可调输出质量。纯浏览器本地处理,图片不上传服务器。" />
+<meta name="keywords" content="图片格式转换,jpg转png,png转jpg,图片转webp,webp转jpg,在线格式转换" />
+<meta name="robots" content="index,follow" />
+<meta name="theme-color" content="#2f6bff" />
+<link rel="canonical" href="https://tuqingsong.pages.dev/t/image-convert.html" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="图轻松" />
+<meta property="og:title" content="图片格式转换 - JPG / PNG / WebP 互转,免费在线" />
+<meta property="og:description" content="免费在线图片格式转换工具。JPG、PNG、WebP 之间互相转换,可调输出质量。纯浏览器本地处理,图片不上传服务器。" />
+<meta property="og:url" content="https://tuqingsong.pages.dev/t/image-convert.html" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"图片格式转换","url":"https://tuqingsong.pages.dev/t/image-convert.html","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"免费在线图片格式转换工具。JPG、PNG、WebP 之间互相转换,可调输出质量。纯浏览器本地处理,图片不上传服务器。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"转成 JPG 后透明背景怎么办?","acceptedAnswer":{"@type":"Answer","text":"JPG 不支持透明,透明区域会变成黑色或白色。需要保留透明请选 PNG 或 WebP。"}},{"@type":"Question","name":"转格式会损失画质吗?","acceptedAnswer":{"@type":"Answer","text":"转成 PNG 是无损的。转成 JPG 会有一次有损压缩,质量滑块越高损失越小。"}},{"@type":"Question","name":"图片会被上传吗?","acceptedAnswer":{"@type":"Answer","text":"不会,全程在浏览器本地完成。"}}]}</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+background:radial-gradient(900px 500px at 15% -10%,rgba(47,107,255,.07),transparent 60%),#f4f7fc;
+color:#16233f;line-height:1.85;padding:0 0 60px}
+header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(15,23,42,.06);
+padding:14px 22px;position:sticky;top:0;z-index:9}
+header a{color:#16233f;text-decoration:none;font-weight:800;font-size:17px}
+header a::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+background:linear-gradient(135deg,#2f6bff,#5b8cff);margin-right:8px;vertical-align:1px}
+main{max-width:760px;margin:0 auto;padding:34px 20px}
+h1{font-size:27px;line-height:1.4;margin-bottom:14px;letter-spacing:-.3px}
+.lead{font-size:16px;color:#455468;margin-bottom:22px}
+.cta{display:inline-block;background:linear-gradient(135deg,#2f6bff,#5b8cff);color:#fff;text-decoration:none;
+padding:13px 30px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 8px 22px rgba(47,107,255,.28);
+margin:6px 0 8px;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta-note{font-size:13px;color:#6b7a94;margin-bottom:30px}
+h2{font-size:19px;margin:30px 0 10px;padding-left:11px;border-left:4px solid #2f6bff}
+h3{font-size:15px;margin:18px 0 6px;color:#2f6bff}
+p{margin:10px 0;color:#2c3a52}
+ol,ul{padding-left:22px;margin:10px 0}
+li{margin:7px 0;color:#2c3a52}
+.steps{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:18px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.steps li{margin:9px 0}
+.faq{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:6px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.faq dt{font-weight:700;margin:16px 0 4px}
+.faq dd{color:#455468;margin-bottom:16px;font-size:14px}
+.privacy{background:linear-gradient(135deg,rgba(47,107,255,.06),rgba(0,180,216,.06));
+border:1px solid rgba(47,107,255,.18);border-radius:14px;padding:16px 20px;margin:26px 0;font-size:14px}
+.privacy b{color:#2f6bff}
+.others{margin-top:36px;padding-top:22px;border-top:1px solid #e2e8f2}
+.others h2{border:none;padding:0;font-size:15px;color:#6b7a94;margin-bottom:12px}
+.others a{display:inline-block;background:#fff;border:1px solid #e2e8f2;border-radius:9px;
+padding:7px 14px;margin:0 8px 8px 0;color:#2c3a52;text-decoration:none;font-size:13px;transition:.15s}
+.others a:hover{border-color:#2f6bff;color:#2f6bff}
+footer{max-width:760px;margin:40px auto 0;padding:20px;color:#6b7a94;font-size:12.5px;text-align:center;
+border-top:1px solid #e2e8f2}
+@media(max-width:600px){h1{font-size:22px}main{padding:24px 16px}}
+</style>
+</head>
+<body>
+<header><a href="/">图轻松</a></header>
+<main>
+  <h1>图片格式转换</h1>
+  <p class="lead">JPG、PNG、WebP 互相转。需要透明背景转 PNG,JPG 体积更小,WebP 最小但兼容性略差。</p>
+  <a class="cta" href="/?tool=convert">免费使用 →</a>
+  <p class="cta-note">不用注册,不用安装,打开就能用。</p>
+
+  <h2>怎么选格式</h2>
+  <p>JPG 体积最小、兼容性最好,适合照片,但不支持透明背景。PNG 支持透明、无损,但体积大,适合图标、截图、需要透明底的图。WebP 体积通常比 JPG 还小且支持透明,但一些老系统和老软件不认。</p>
+  <h2>质量只对 JPG / WebP 有效</h2>
+  <p>PNG 是无损格式,没有质量参数可调。选 PNG 输出时质量滑块不起作用,输出结果一定是最清晰的。</p>
+  <h2>常见需求</h2>
+  <p>把 PNG 截图转成 JPG 以便上传到只接受 JPG 的系统;把照片转成 WebP 让网页加载更快;把 WebP 转回 JPG 以便在老软件里打开。</p>
+  <h2>怎么判断该转成哪种</h2>
+  <p>一个简单的判断顺序:需要透明背景吗?需要,就选 PNG 或 WebP。不需要透明、又是最普通的照片?选 JPG,兼容性最好。是给网页用、想加载更快?选 WebP,现代浏览器基本都支持。要给老软件或老系统打开?那就只能用 JPG 或 PNG 了。</p>
+
+  <h2>怎么用</h2>
+  <div class="steps"><ol>
+    <li>拖入图片</li>
+    <li>选择输出格式</li>
+    <li>如果是 JPG / WebP,可按需调整质量</li>
+    <li>点「开始转换」并下载</li>
+  </ol></div>
+
+  <div class="privacy">
+    <b>文件不上传服务器。</b>这个页面对应的功能全部在你的浏览器里完成,文件不会发送到任何服务器,
+    断网也能用。你可以打开浏览器开发者工具的 Network 面板自己验证。
+  </div>
+
+  <h2>常见问题</h2>
+  <dl class="faq">
+    <dt>转成 JPG 后透明背景怎么办?</dt>
+    <dd>JPG 不支持透明,透明区域会变成黑色或白色。需要保留透明请选 PNG 或 WebP。</dd>
+    <dt>转格式会损失画质吗?</dt>
+    <dd>转成 PNG 是无损的。转成 JPG 会有一次有损压缩,质量滑块越高损失越小。</dd>
+    <dt>图片会被上传吗?</dt>
+    <dd>不会,全程在浏览器本地完成。</dd>
+  </dl>
+
+  <a class="cta" href="/?tool=convert">免费使用 图片格式转换 →</a>
+
+  <div class="others">
+    <h2>其他工具</h2>
+    <a href="/t/image-compress.html">图片压缩</a>
+    <a href="/t/remove-exif.html">照片隐私清除</a>
+    <a href="/t/pdf-merge.html">PDF 合并</a>
+    <a href="/t/pdf-split.html">PDF 拆分</a>
+    <a href="/t/pdf-watermark.html">PDF 加水印</a>
+    <a href="/t/image-to-pdf.html">图片转 PDF</a>
+    <a href="/t/image-watermark.html">图片加水印</a>
+    <a href="/t/pdf-stamp.html">PDF 盖章</a>
+    <a href="/t/pdf-page-number.html">PDF 加页码</a>
+    <a href="/t/pdf-organize.html">PDF 页面管理</a>
+    <a href="/t/image-resize.html">图片改尺寸</a>
+    <a href="/t/image-crop.html">图片裁剪</a>
+    <a href="/">全部 18 个工具</a>
+  </div>
+</main>
+<footer>图轻松 · 图片与 PDF 工具,全部在浏览器本地处理,文件不上传服务器</footer>
+</body>
+</html>

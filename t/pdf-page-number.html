@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PDF 加页码 - 批量给每页加页码,格式位置可调,免费在线</title>
+<meta name="description" content="免费在线 PDF 加页码工具。支持「第 X 页 / 共 Y 页」等多种格式,位置可选上下左右,可设置起始页码与跳过封面。文件不上传服务器。" />
+<meta name="keywords" content="PDF加页码,pdf页码,给pdf加页码,pdf添加页码,批量加页码,pdf页脚页码" />
+<meta name="robots" content="index,follow" />
+<meta name="theme-color" content="#2f6bff" />
+<link rel="canonical" href="https://tuqingsong.pages.dev/t/pdf-page-number.html" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="图轻松" />
+<meta property="og:title" content="PDF 加页码 - 批量给每页加页码,格式位置可调,免费在线" />
+<meta property="og:description" content="免费在线 PDF 加页码工具。支持「第 X 页 / 共 Y 页」等多种格式,位置可选上下左右,可设置起始页码与跳过封面。文件不上传服务器。" />
+<meta property="og:url" content="https://tuqingsong.pages.dev/t/pdf-page-number.html" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"PDF 加页码","url":"https://tuqingsong.pages.dev/t/pdf-page-number.html","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"免费在线 PDF 加页码工具。支持「第 X 页 / 共 Y 页」等多种格式,位置可选上下左右,可设置起始页码与跳过封面。文件不上传服务器。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"页码会影响正文内容吗?","acceptedAnswer":{"@type":"Answer","text":"不会。页码是叠加在页面上的,不改动原有内容。"}},{"@type":"Question","name":"能调整字号和颜色吗?","acceptedAnswer":{"@type":"Answer","text":"可以,字号和颜色都能调。"}},{"@type":"Question","name":"文件会被上传吗?","acceptedAnswer":{"@type":"Answer","text":"不会,全程在浏览器本地完成。"}}]}</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+background:radial-gradient(900px 500px at 15% -10%,rgba(47,107,255,.07),transparent 60%),#f4f7fc;
+color:#16233f;line-height:1.85;padding:0 0 60px}
+header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(15,23,42,.06);
+padding:14px 22px;position:sticky;top:0;z-index:9}
+header a{color:#16233f;text-decoration:none;font-weight:800;font-size:17px}
+header a::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+background:linear-gradient(135deg,#2f6bff,#5b8cff);margin-right:8px;vertical-align:1px}
+main{max-width:760px;margin:0 auto;padding:34px 20px}
+h1{font-size:27px;line-height:1.4;margin-bottom:14px;letter-spacing:-.3px}
+.lead{font-size:16px;color:#455468;margin-bottom:22px}
+.cta{display:inline-block;background:linear-gradient(135deg,#2f6bff,#5b8cff);color:#fff;text-decoration:none;
+padding:13px 30px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 8px 22px rgba(47,107,255,.28);
+margin:6px 0 8px;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta-note{font-size:13px;color:#6b7a94;margin-bottom:30px}
+h2{font-size:19px;margin:30px 0 10px;padding-left:11px;border-left:4px solid #2f6bff}
+h3{font-size:15px;margin:18px 0 6px;color:#2f6bff}
+p{margin:10px 0;color:#2c3a52}
+ol,ul{padding-left:22px;margin:10px 0}
+li{margin:7px 0;color:#2c3a52}
+.steps{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:18px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.steps li{margin:9px 0}
+.faq{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:6px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.faq dt{font-weight:700;margin:16px 0 4px}
+.faq dd{color:#455468;margin-bottom:16px;font-size:14px}
+.privacy{background:linear-gradient(135deg,rgba(47,107,255,.06),rgba(0,180,216,.06));
+border:1px solid rgba(47,107,255,.18);border-radius:14px;padding:16px 20px;margin:26px 0;font-size:14px}
+.privacy b{color:#2f6bff}
+.others{margin-top:36px;padding-top:22px;border-top:1px solid #e2e8f2}
+.others h2{border:none;padding:0;font-size:15px;color:#6b7a94;margin-bottom:12px}
+.others a{display:inline-block;background:#fff;border:1px solid #e2e8f2;border-radius:9px;
+padding:7px 14px;margin:0 8px 8px 0;color:#2c3a52;text-decoration:none;font-size:13px;transition:.15s}
+.others a:hover{border-color:#2f6bff;color:#2f6bff}
+footer{max-width:760px;margin:40px auto 0;padding:20px;color:#6b7a94;font-size:12.5px;text-align:center;
+border-top:1px solid #e2e8f2}
+@media(max-width:600px){h1{font-size:22px}main{padding:24px 16px}}
+</style>
+</head>
+<body>
+<header><a href="/">图轻松</a></header>
+<main>
+  <h1>PDF 加页码</h1>
+  <p class="lead">给 PDF 每一页加上页码,格式和位置都能选。</p>
+  <a class="cta" href="/?tool=pdfpagenum">免费使用 →</a>
+  <p class="cta-note">不用注册,不用安装,打开就能用。</p>
+
+  <h2>几种常用格式</h2>
+  <p>「第 X 页 / 共 Y 页」适合正式文档;「X / Y」简洁;「- X -」常见于书籍;纯数字最干净。共几页会自动按实际页数计算,不需要你手填。</p>
+  <h2>跳过封面</h2>
+  <p>很多文档的第一页是封面,不应该有页码。勾选「跳过第一页」后,页码会从第二页开始标,但数字仍然从你设置的起始页码算起。</p>
+  <h2>起始页码</h2>
+  <p>如果这份 PDF 是某个大文档的一部分,可以从指定数字开始编号,比如从 15 开始。</p>
+  <h2>位置怎么选比较合适</h2>
+  <p>正式文档、论文一般用底部居中或底部靠右;书籍排版常用居中;内部资料放右下角比较常见。如果原文档本身有页脚内容(公司名、机密标记之类),注意别和页码重叠 —— 可以先看一眼原文档的页脚区域再决定位置。</p>
+  <h2>加完还能再改吗</h2>
+  <p>可以。页码是叠加到页面上的,原文档内容没有被改动。如果对位置或格式不满意,拿原始文件重新做一次即可,不需要先撤销。建议保留一份原始 PDF 的副本,需要反复调整时更方便。</p>
+
+  <h2>怎么用</h2>
+  <div class="steps"><ol>
+    <li>拖入 PDF</li>
+    <li>选择页码格式和位置</li>
+    <li>按需设置起始页码、是否跳过封面</li>
+    <li>点「添加页码」并下载</li>
+  </ol></div>
+
+  <div class="privacy">
+    <b>文件不上传服务器。</b>这个页面对应的功能全部在你的浏览器里完成,文件不会发送到任何服务器,
+    断网也能用。你可以打开浏览器开发者工具的 Network 面板自己验证。
+  </div>
+
+  <h2>常见问题</h2>
+  <dl class="faq">
+    <dt>页码会影响正文内容吗?</dt>
+    <dd>不会。页码是叠加在页面上的,不改动原有内容。</dd>
+    <dt>能调整字号和颜色吗?</dt>
+    <dd>可以,字号和颜色都能调。</dd>
+    <dt>文件会被上传吗?</dt>
+    <dd>不会,全程在浏览器本地完成。</dd>
+  </dl>
+
+  <a class="cta" href="/?tool=pdfpagenum">免费使用 PDF 加页码 →</a>
+
+  <div class="others">
+    <h2>其他工具</h2>
+    <a href="/t/image-compress.html">图片压缩</a>
+    <a href="/t/remove-exif.html">照片隐私清除</a>
+    <a href="/t/pdf-merge.html">PDF 合并</a>
+    <a href="/t/pdf-split.html">PDF 拆分</a>
+    <a href="/t/pdf-watermark.html">PDF 加水印</a>
+    <a href="/t/image-to-pdf.html">图片转 PDF</a>
+    <a href="/t/image-watermark.html">图片加水印</a>
+    <a href="/t/pdf-stamp.html">PDF 盖章</a>
+    <a href="/t/pdf-organize.html">PDF 页面管理</a>
+    <a href="/t/image-resize.html">图片改尺寸</a>
+    <a href="/t/image-convert.html">图片格式转换</a>
+    <a href="/t/image-crop.html">图片裁剪</a>
+    <a href="/">全部 18 个工具</a>
+  </div>
+</main>
+<footer>图轻松 · 图片与 PDF 工具,全部在浏览器本地处理,文件不上传服务器</footer>
+</body>
+</html>

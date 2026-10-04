@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>照片 EXIF 信息清除 - 去掉 GPS 定位和拍摄地点,图片不上传</title>
+<meta name="description" content="查看并一键清除照片里的 EXIF 隐私信息:GPS 定位坐标、设备型号、拍摄时间、机身序列号。纯本地处理,图片不上传服务器,清除后画质无损。" />
+<meta name="keywords" content="EXIF清除,去除照片GPS,照片位置信息,清除图片元数据,照片隐私,去定位信息,图片exif查看" />
+<meta name="robots" content="index,follow" />
+<meta name="theme-color" content="#2f6bff" />
+<link rel="canonical" href="https://tuqingsong.pages.dev/t/remove-exif.html" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="图轻松" />
+<meta property="og:title" content="照片 EXIF 信息清除 - 去掉 GPS 定位和拍摄地点,图片不上传" />
+<meta property="og:description" content="查看并一键清除照片里的 EXIF 隐私信息:GPS 定位坐标、设备型号、拍摄时间、机身序列号。纯本地处理,图片不上传服务器,清除后画质无损。" />
+<meta property="og:url" content="https://tuqingsong.pages.dev/t/remove-exif.html" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"照片隐私清除","url":"https://tuqingsong.pages.dev/t/remove-exif.html","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"查看并一键清除照片里的 EXIF 隐私信息:GPS 定位坐标、设备型号、拍摄时间、机身序列号。纯本地处理,图片不上传服务器,清除后画质无损。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"清除后画质会变差吗?","acceptedAnswer":{"@type":"Answer","text":"不会。EXIF 和图像数据是文件里分开的两块,清除只是把元信息段摘掉,图像数据完全不重新编码。"}},{"@type":"Question","name":"支持哪些格式?","acceptedAnswer":{"@type":"Answer","text":"目前支持 JPG 和 PNG。这两种是照片最常见的格式。其他格式(如 WebP)本身通常不带 EXIF。"}},{"@type":"Question","name":"工具会看到我的照片内容吗?","acceptedAnswer":{"@type":"Answer","text":"不会,也没有能力看到。所有解析都在你的浏览器里完成,照片不会发送到任何服务器。这个工具本身的存在意义就是处理隐私信息,把照片上传给第三方服务器来处理隐私,是自相矛盾的。"}},{"@type":"Question","name":"平台不是会自动清除吗?","acceptedAnswer":{"@type":"Answer","text":"不一定。部分社交平台会处理,但通过原图发送、邮件、网盘、论坛上传时通常会完整保留。与其依赖平台,不如发布前自己清一遍。"}}]}</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+background:radial-gradient(900px 500px at 15% -10%,rgba(47,107,255,.07),transparent 60%),#f4f7fc;
+color:#16233f;line-height:1.85;padding:0 0 60px}
+header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(15,23,42,.06);
+padding:14px 22px;position:sticky;top:0;z-index:9}
+header a{color:#16233f;text-decoration:none;font-weight:800;font-size:17px}
+header a::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+background:linear-gradient(135deg,#2f6bff,#5b8cff);margin-right:8px;vertical-align:1px}
+main{max-width:760px;margin:0 auto;padding:34px 20px}
+h1{font-size:27px;line-height:1.4;margin-bottom:14px;letter-spacing:-.3px}
+.lead{font-size:16px;color:#455468;margin-bottom:22px}
+.cta{display:inline-block;background:linear-gradient(135deg,#2f6bff,#5b8cff);color:#fff;text-decoration:none;
+padding:13px 30px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 8px 22px rgba(47,107,255,.28);
+margin:6px 0 8px;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta-note{font-size:13px;color:#6b7a94;margin-bottom:30px}
+h2{font-size:19px;margin:30px 0 10px;padding-left:11px;border-left:4px solid #2f6bff}
+h3{font-size:15px;margin:18px 0 6px;color:#2f6bff}
+p{margin:10px 0;color:#2c3a52}
+ol,ul{padding-left:22px;margin:10px 0}
+li{margin:7px 0;color:#2c3a52}
+.steps{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:18px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.steps li{margin:9px 0}
+.faq{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:6px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.faq dt{font-weight:700;margin:16px 0 4px}
+.faq dd{color:#455468;margin-bottom:16px;font-size:14px}
+.privacy{background:linear-gradient(135deg,rgba(47,107,255,.06),rgba(0,180,216,.06));
+border:1px solid rgba(47,107,255,.18);border-radius:14px;padding:16px 20px;margin:26px 0;font-size:14px}
+.privacy b{color:#2f6bff}
+.others{margin-top:36px;padding-top:22px;border-top:1px solid #e2e8f2}
+.others h2{border:none;padding:0;font-size:15px;color:#6b7a94;margin-bottom:12px}
+.others a{display:inline-block;background:#fff;border:1px solid #e2e8f2;border-radius:9px;
+padding:7px 14px;margin:0 8px 8px 0;color:#2c3a52;text-decoration:none;font-size:13px;transition:.15s}
+.others a:hover{border-color:#2f6bff;color:#2f6bff}
+footer{max-width:760px;margin:40px auto 0;padding:20px;color:#6b7a94;font-size:12.5px;text-align:center;
+border-top:1px solid #e2e8f2}
+@media(max-width:600px){h1{font-size:22px}main{padding:24px 16px}}
+</style>
+</head>
+<body>
+<header><a href="/">图轻松</a></header>
+<main>
+  <h1>照片隐私清除</h1>
+  <p class="lead">手机拍的照片里,藏着你的拍摄地点。发到网上之前,先把它去掉。</p>
+  <a class="cta" href="/?tool=exif">免费使用 →</a>
+  <p class="cta-note">不用注册,不用安装,打开就能用。</p>
+
+  <h2>你的照片可能正在泄露你的位置</h2>
+  <p>用手机拍的照片,除了画面本身,文件里还附带一组看不见的信息:拍摄时的 GPS 经纬度、手机品牌与型号、精确到秒的拍摄时间、有时还有机身序列号。这组信息叫 EXIF。它的精度通常在 10 米以内 —— 也就是说,一张在家拍的二手闲置照片,可能已经把你家楼栋的位置一起发出去了。绝大多数人不知道这件事,也不会在发布前检查。</p>
+  <h2>怎么确认自己的照片有没有</h2>
+  <p>把照片拖进这个工具,它会读出照片里能读到的所有信息并列出来。如果带有位置,页面顶部会用红色明确提示,并给出经纬度坐标 —— 你可以把那串坐标复制到任何地图里搜一下,亲眼看看它指向哪里。</p>
+  <h2>清除的原理,以及为什么画质不变</h2>
+  <p>EXIF 是作为一个独立的数据段存放在图片文件里的,和真正的图像数据是分开的两块。清除的做法就是把那个数据段从文件里摘掉,图像数据一个字节都不重新编码、不重新压缩。所以画质不会有任何变化,只是文件变小了一点。这与&quot;把图片重新导出一次&quot;是两回事 —— 后者才会损失画质。</p>
+  <h2>一点建议</h2>
+  <p>社交平台大多会清除 EXIF(但也并非全部、并非总是),而通过微信原图发送、邮件附件、网盘分享、直接上传到论坛时,信息是完整保留的。涉及家里、公司、孩子学校这类照片,发布前过一遍这个工具比较稳妥。</p>
+  <h2>除了位置,还有什么值得注意</h2>
+  <p>拍摄时间有时也会泄露信息 —— 比如一张&quot;今晚加班&quot;的照片带上了精确到秒的时间戳,再结合其他信息,可能推断出你的作息。机身序列号则是设备层面的标识,在二手交易场景里,有人会用它来核对设备是否与描述一致。这些信息单独看都不起眼,合在一起就不一定了。</p>
+
+  <h2>怎么用</h2>
+  <div class="steps"><ol>
+    <li>把照片拖进页面</li>
+    <li>页面会列出照片携带的全部隐私信息,有位置会红色警示</li>
+    <li>点「清除信息并下载」</li>
+    <li>下载到的图片已经不含任何 EXIF,画质与原图一致</li>
+  </ol></div>
+
+  <div class="privacy">
+    <b>文件不上传服务器。</b>这个页面对应的功能全部在你的浏览器里完成,文件不会发送到任何服务器,
+    断网也能用。你可以打开浏览器开发者工具的 Network 面板自己验证。
+  </div>
+
+  <h2>常见问题</h2>
+  <dl class="faq">
+    <dt>清除后画质会变差吗?</dt>
+    <dd>不会。EXIF 和图像数据是文件里分开的两块,清除只是把元信息段摘掉,图像数据完全不重新编码。</dd>
+    <dt>支持哪些格式?</dt>
+    <dd>目前支持 JPG 和 PNG。这两种是照片最常见的格式。其他格式(如 WebP)本身通常不带 EXIF。</dd>
+    <dt>工具会看到我的照片内容吗?</dt>
+    <dd>不会,也没有能力看到。所有解析都在你的浏览器里完成,照片不会发送到任何服务器。这个工具本身的存在意义就是处理隐私信息,把照片上传给第三方服务器来处理隐私,是自相矛盾的。</dd>
+    <dt>平台不是会自动清除吗?</dt>
+    <dd>不一定。部分社交平台会处理,但通过原图发送、邮件、网盘、论坛上传时通常会完整保留。与其依赖平台,不如发布前自己清一遍。</dd>
+  </dl>
+
+  <a class="cta" href="/?tool=exif">免费使用 照片隐私清除 →</a>
+
+  <div class="others">
+    <h2>其他工具</h2>
+    <a href="/t/image-compress.html">图片压缩</a>
+    <a href="/t/pdf-merge.html">PDF 合并</a>
+    <a href="/t/pdf-split.html">PDF 拆分</a>
+    <a href="/t/pdf-watermark.html">PDF 加水印</a>
+    <a href="/t/image-to-pdf.html">图片转 PDF</a>
+    <a href="/t/image-watermark.html">图片加水印</a>
+    <a href="/t/pdf-stamp.html">PDF 盖章</a>
+    <a href="/t/pdf-page-number.html">PDF 加页码</a>
+    <a href="/t/pdf-organize.html">PDF 页面管理</a>
+    <a href="/t/image-resize.html">图片改尺寸</a>
+    <a href="/t/image-convert.html">图片格式转换</a>
+    <a href="/t/image-crop.html">图片裁剪</a>
+    <a href="/">全部 18 个工具</a>
+  </div>
+</main>
+<footer>图轻松 · 图片与 PDF 工具,全部在浏览器本地处理,文件不上传服务器</footer>
+</body>
+</html>

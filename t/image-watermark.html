@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>图片加水印 - 文字或 Logo 水印,可拖动定位、可平铺,免费在线</title>
+<meta name="description" content="免费在线图片加水印工具。支持文字水印和图片水印(Logo/印章),可拖动到任意位置,支持平铺、旋转、透明度、字号、颜色。图片不上传服务器。" />
+<meta name="keywords" content="图片加水印,在线加水印,给图片加文字,图片加水印工具,照片加水印,批量加水印" />
+<meta name="robots" content="index,follow" />
+<meta name="theme-color" content="#2f6bff" />
+<link rel="canonical" href="https://tuqingsong.pages.dev/t/image-watermark.html" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="图轻松" />
+<meta property="og:title" content="图片加水印 - 文字或 Logo 水印,可拖动定位、可平铺,免费在线" />
+<meta property="og:description" content="免费在线图片加水印工具。支持文字水印和图片水印(Logo/印章),可拖动到任意位置,支持平铺、旋转、透明度、字号、颜色。图片不上传服务器。" />
+<meta property="og:url" content="https://tuqingsong.pages.dev/t/image-watermark.html" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"图片加水印","url":"https://tuqingsong.pages.dev/t/image-watermark.html","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"免费在线图片加水印工具。支持文字水印和图片水印(Logo/印章),可拖动到任意位置,支持平铺、旋转、透明度、字号、颜色。图片不上传服务器。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"水印位置能精确控制吗?","acceptedAnswer":{"@type":"Answer","text":"可以拖动到任意位置。面板里也会显示当前的横向、纵向百分比坐标。"}},{"@type":"Question","name":"能批量加水印吗?","acceptedAnswer":{"@type":"Answer","text":"可以,批量处理是支持者的功能,免费用户一次处理一张。"}},{"@type":"Question","name":"透明度多少合适?","acceptedAnswer":{"@type":"Answer","text":"防盗用可以调到 20%~40%,既要看得见又不至于太干扰。纯装饰则 60% 以上。"}},{"@type":"Question","name":"图片会被上传吗?","acceptedAnswer":{"@type":"Answer","text":"不会,全程在浏览器本地完成。"}}]}</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+background:radial-gradient(900px 500px at 15% -10%,rgba(47,107,255,.07),transparent 60%),#f4f7fc;
+color:#16233f;line-height:1.85;padding:0 0 60px}
+header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(15,23,42,.06);
+padding:14px 22px;position:sticky;top:0;z-index:9}
+header a{color:#16233f;text-decoration:none;font-weight:800;font-size:17px}
+header a::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+background:linear-gradient(135deg,#2f6bff,#5b8cff);margin-right:8px;vertical-align:1px}
+main{max-width:760px;margin:0 auto;padding:34px 20px}
+h1{font-size:27px;line-height:1.4;margin-bottom:14px;letter-spacing:-.3px}
+.lead{font-size:16px;color:#455468;margin-bottom:22px}
+.cta{display:inline-block;background:linear-gradient(135deg,#2f6bff,#5b8cff);color:#fff;text-decoration:none;
+padding:13px 30px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 8px 22px rgba(47,107,255,.28);
+margin:6px 0 8px;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta-note{font-size:13px;color:#6b7a94;margin-bottom:30px}
+h2{font-size:19px;margin:30px 0 10px;padding-left:11px;border-left:4px solid #2f6bff}
+h3{font-size:15px;margin:18px 0 6px;color:#2f6bff}
+p{margin:10px 0;color:#2c3a52}
+ol,ul{padding-left:22px;margin:10px 0}
+li{margin:7px 0;color:#2c3a52}
+.steps{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:18px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.steps li{margin:9px 0}
+.faq{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:6px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.faq dt{font-weight:700;margin:16px 0 4px}
+.faq dd{color:#455468;margin-bottom:16px;font-size:14px}
+.privacy{background:linear-gradient(135deg,rgba(47,107,255,.06),rgba(0,180,216,.06));
+border:1px solid rgba(47,107,255,.18);border-radius:14px;padding:16px 20px;margin:26px 0;font-size:14px}
+.privacy b{color:#2f6bff}
+.others{margin-top:36px;padding-top:22px;border-top:1px solid #e2e8f2}
+.others h2{border:none;padding:0;font-size:15px;color:#6b7a94;margin-bottom:12px}
+.others a{display:inline-block;background:#fff;border:1px solid #e2e8f2;border-radius:9px;
+padding:7px 14px;margin:0 8px 8px 0;color:#2c3a52;text-decoration:none;font-size:13px;transition:.15s}
+.others a:hover{border-color:#2f6bff;color:#2f6bff}
+footer{max-width:760px;margin:40px auto 0;padding:20px;color:#6b7a94;font-size:12.5px;text-align:center;
+border-top:1px solid #e2e8f2}
+@media(max-width:600px){h1{font-size:22px}main{padding:24px 16px}}
+</style>
+</head>
+<body>
+<header><a href="/">图轻松</a></header>
+<main>
+  <h1>图片加水印</h1>
+  <p class="lead">给图片加上文字或 Logo 水印,位置可以直接拖动,想放哪就放哪。</p>
+  <a class="cta" href="/?tool=watermark">免费使用 →</a>
+  <p class="cta-note">不用注册,不用安装,打开就能用。</p>
+
+  <h2>位置可以自由拖</h2>
+  <p>不需要在&quot;左上角、居中、右下角&quot;里挑。页面里有一个实时预览,直接用鼠标或手指把水印拖到任意位置,所见即所得。常用的角落位置也有快捷按钮,点一下自动摆好。</p>
+  <h2>文字和图片两种水印</h2>
+  <p>文字水印适合写&quot;© 你的名字&quot;&quot;仅供XX使用&quot;这类内容,可以调字号、颜色、是否加粗。图片水印适合贴 Logo 或印章图片,大小按占图宽的比例缩放。两者都支持调整透明度和旋转角度。</p>
+  <h2>平铺防截图</h2>
+  <p>如果目的是防止别人盗图,单个水印很容易被裁掉或修掉。开启平铺后水印会满图重复,且溢出对称、不留空白边,截图也无法避开。</p>
+
+  <h2>怎么用</h2>
+  <div class="steps"><ol>
+    <li>拖入图片</li>
+    <li>选文字或图片水印</li>
+    <li>在预览里拖动水印到想要的位置</li>
+    <li>调整大小、透明度、角度;需要防盗图就勾选平铺</li>
+    <li>点「添加水印」并下载</li>
+  </ol></div>
+
+  <div class="privacy">
+    <b>文件不上传服务器。</b>这个页面对应的功能全部在你的浏览器里完成,文件不会发送到任何服务器,
+    断网也能用。你可以打开浏览器开发者工具的 Network 面板自己验证。
+  </div>
+
+  <h2>常见问题</h2>
+  <dl class="faq">
+    <dt>水印位置能精确控制吗?</dt>
+    <dd>可以拖动到任意位置。面板里也会显示当前的横向、纵向百分比坐标。</dd>
+    <dt>能批量加水印吗?</dt>
+    <dd>可以,批量处理是支持者的功能,免费用户一次处理一张。</dd>
+    <dt>透明度多少合适?</dt>
+    <dd>防盗用可以调到 20%~40%,既要看得见又不至于太干扰。纯装饰则 60% 以上。</dd>
+    <dt>图片会被上传吗?</dt>
+    <dd>不会,全程在浏览器本地完成。</dd>
+  </dl>
+
+  <a class="cta" href="/?tool=watermark">免费使用 图片加水印 →</a>
+
+  <div class="others">
+    <h2>其他工具</h2>
+    <a href="/t/image-compress.html">图片压缩</a>
+    <a href="/t/remove-exif.html">照片隐私清除</a>
+    <a href="/t/pdf-merge.html">PDF 合并</a>
+    <a href="/t/pdf-split.html">PDF 拆分</a>
+    <a href="/t/pdf-watermark.html">PDF 加水印</a>
+    <a href="/t/image-to-pdf.html">图片转 PDF</a>
+    <a href="/t/pdf-stamp.html">PDF 盖章</a>
+    <a href="/t/pdf-page-number.html">PDF 加页码</a>
+    <a href="/t/pdf-organize.html">PDF 页面管理</a>
+    <a href="/t/image-resize.html">图片改尺寸</a>
+    <a href="/t/image-convert.html">图片格式转换</a>
+    <a href="/t/image-crop.html">图片裁剪</a>
+    <a href="/">全部 18 个工具</a>
+  </div>
+</main>
+<footer>图轻松 · 图片与 PDF 工具,全部在浏览器本地处理,文件不上传服务器</footer>
+</body>
+</html>

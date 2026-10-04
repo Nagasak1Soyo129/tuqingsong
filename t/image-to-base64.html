@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>图片转 Base64 - 生成 Data URL,免费在线、不上传服务器</title>
+<meta name="description" content="免费在线图片转 Base64 工具。把图片转成 Data URL 文本,可直接嵌入网页或代码。支持复制和下载 txt。图片不上传服务器。" />
+<meta name="keywords" content="图片转base64,图片转dataurl,base64编码图片,图片转base64在线,data url生成" />
+<meta name="robots" content="index,follow" />
+<meta name="theme-color" content="#2f6bff" />
+<link rel="canonical" href="https://tuqingsong.pages.dev/t/image-to-base64.html" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="图轻松" />
+<meta property="og:title" content="图片转 Base64 - 生成 Data URL,免费在线、不上传服务器" />
+<meta property="og:description" content="免费在线图片转 Base64 工具。把图片转成 Data URL 文本,可直接嵌入网页或代码。支持复制和下载 txt。图片不上传服务器。" />
+<meta property="og:url" content="https://tuqingsong.pages.dev/t/image-to-base64.html" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"图片转 Base64","url":"https://tuqingsong.pages.dev/t/image-to-base64.html","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"免费在线图片转 Base64 工具。把图片转成 Data URL 文本,可直接嵌入网页或代码。支持复制和下载 txt。图片不上传服务器。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"大图适合转 Base64 吗?","acceptedAnswer":{"@type":"Answer","text":"不适合。体积会膨胀约 33%,大图转完文本会非常长,影响网页加载速度。建议只对小图标使用。"}},{"@type":"Question","name":"支持哪些图片格式?","acceptedAnswer":{"@type":"Answer","text":"浏览器能读取的格式都可以,转出来的 Data URL 会带上对应的 MIME 类型。"}},{"@type":"Question","name":"图片会被上传吗?","acceptedAnswer":{"@type":"Answer","text":"不会,全程在浏览器本地完成。"}}]}</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+background:radial-gradient(900px 500px at 15% -10%,rgba(47,107,255,.07),transparent 60%),#f4f7fc;
+color:#16233f;line-height:1.85;padding:0 0 60px}
+header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(15,23,42,.06);
+padding:14px 22px;position:sticky;top:0;z-index:9}
+header a{color:#16233f;text-decoration:none;font-weight:800;font-size:17px}
+header a::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+background:linear-gradient(135deg,#2f6bff,#5b8cff);margin-right:8px;vertical-align:1px}
+main{max-width:760px;margin:0 auto;padding:34px 20px}
+h1{font-size:27px;line-height:1.4;margin-bottom:14px;letter-spacing:-.3px}
+.lead{font-size:16px;color:#455468;margin-bottom:22px}
+.cta{display:inline-block;background:linear-gradient(135deg,#2f6bff,#5b8cff);color:#fff;text-decoration:none;
+padding:13px 30px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 8px 22px rgba(47,107,255,.28);
+margin:6px 0 8px;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta-note{font-size:13px;color:#6b7a94;margin-bottom:30px}
+h2{font-size:19px;margin:30px 0 10px;padding-left:11px;border-left:4px solid #2f6bff}
+h3{font-size:15px;margin:18px 0 6px;color:#2f6bff}
+p{margin:10px 0;color:#2c3a52}
+ol,ul{padding-left:22px;margin:10px 0}
+li{margin:7px 0;color:#2c3a52}
+.steps{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:18px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.steps li{margin:9px 0}
+.faq{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:6px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.faq dt{font-weight:700;margin:16px 0 4px}
+.faq dd{color:#455468;margin-bottom:16px;font-size:14px}
+.privacy{background:linear-gradient(135deg,rgba(47,107,255,.06),rgba(0,180,216,.06));
+border:1px solid rgba(47,107,255,.18);border-radius:14px;padding:16px 20px;margin:26px 0;font-size:14px}
+.privacy b{color:#2f6bff}
+.others{margin-top:36px;padding-top:22px;border-top:1px solid #e2e8f2}
+.others h2{border:none;padding:0;font-size:15px;color:#6b7a94;margin-bottom:12px}
+.others a{display:inline-block;background:#fff;border:1px solid #e2e8f2;border-radius:9px;
+padding:7px 14px;margin:0 8px 8px 0;color:#2c3a52;text-decoration:none;font-size:13px;transition:.15s}
+.others a:hover{border-color:#2f6bff;color:#2f6bff}
+footer{max-width:760px;margin:40px auto 0;padding:20px;color:#6b7a94;font-size:12.5px;text-align:center;
+border-top:1px solid #e2e8f2}
+@media(max-width:600px){h1{font-size:22px}main{padding:24px 16px}}
+</style>
+</head>
+<body>
+<header><a href="/">图轻松</a></header>
+<main>
+  <h1>图片转 Base64</h1>
+  <p class="lead">把图片转成一段文本(Base64 / Data URL),可以直接贴进网页或代码里。</p>
+  <a class="cta" href="/?tool=tobase64">免费使用 →</a>
+  <p class="cta-note">不用注册,不用安装,打开就能用。</p>
+
+  <h2>什么场景用得上</h2>
+  <p>做网页时想把小图标直接内联进 CSS 或 HTML,省一次请求;在没有图床的环境里传递小图;把图片塞进 JSON 或配置文件里。这些时候 Base64 很方便。</p>
+  <h2>注意体积会变大</h2>
+  <p>Base64 会把二进制数据编码成文本,体积大约膨胀 33%。所以这个方式只适合小图标、小色块这类几十 KB 以内的小图。大图转 Base64 会让文件变得很大,反而拖慢加载。</p>
+  <h2>怎么用</h2>
+  <p>转出来的文本形如 data:image/png;base64,iVBORw0KGgo... ,可以直接作为 img 标签的 src,或者 CSS 里的 background-image。工具支持一键复制,也可以下载成 txt 文件。</p>
+  <h2>什么时候不该用 Base64</h2>
+  <p>Base64 只适合很小的图。如果图片超过几十 KB,转出来的文本会长得离谱 —— 嵌进网页里会让 HTML 文件变得很大,反而拖慢加载,不如直接放一个图片文件让浏览器缓存。判断标准很简单:如果这段 Base64 文本你复制粘贴时都觉得卡,那就说明不该这么做。</p>
+
+  <h2>怎么用</h2>
+  <div class="steps"><ol>
+    <li>拖入图片</li>
+    <li>点「生成 Base64」</li>
+    <li>复制文本,或下载 txt</li>
+    <li>粘贴到你的代码或配置里</li>
+  </ol></div>
+
+  <div class="privacy">
+    <b>文件不上传服务器。</b>这个页面对应的功能全部在你的浏览器里完成,文件不会发送到任何服务器,
+    断网也能用。你可以打开浏览器开发者工具的 Network 面板自己验证。
+  </div>
+
+  <h2>常见问题</h2>
+  <dl class="faq">
+    <dt>大图适合转 Base64 吗?</dt>
+    <dd>不适合。体积会膨胀约 33%,大图转完文本会非常长,影响网页加载速度。建议只对小图标使用。</dd>
+    <dt>支持哪些图片格式?</dt>
+    <dd>浏览器能读取的格式都可以,转出来的 Data URL 会带上对应的 MIME 类型。</dd>
+    <dt>图片会被上传吗?</dt>
+    <dd>不会,全程在浏览器本地完成。</dd>
+  </dl>
+
+  <a class="cta" href="/?tool=tobase64">免费使用 图片转 Base64 →</a>
+
+  <div class="others">
+    <h2>其他工具</h2>
+    <a href="/t/image-compress.html">图片压缩</a>
+    <a href="/t/remove-exif.html">照片隐私清除</a>
+    <a href="/t/pdf-merge.html">PDF 合并</a>
+    <a href="/t/pdf-split.html">PDF 拆分</a>
+    <a href="/t/pdf-watermark.html">PDF 加水印</a>
+    <a href="/t/image-to-pdf.html">图片转 PDF</a>
+    <a href="/t/image-watermark.html">图片加水印</a>
+    <a href="/t/pdf-stamp.html">PDF 盖章</a>
+    <a href="/t/pdf-page-number.html">PDF 加页码</a>
+    <a href="/t/pdf-organize.html">PDF 页面管理</a>
+    <a href="/t/image-resize.html">图片改尺寸</a>
+    <a href="/t/image-convert.html">图片格式转换</a>
+    <a href="/">全部 18 个工具</a>
+  </div>
+</main>
+<footer>图轻松 · 图片与 PDF 工具,全部在浏览器本地处理,文件不上传服务器</footer>
+</body>
+</html>

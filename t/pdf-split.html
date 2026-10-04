@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PDF 拆分与提取页 - 按页拆开或提取指定页,免费在线</title>
+<meta name="description" content="免费在线 PDF 拆分工具:把 PDF 每页拆成单独文件打包下载,或提取指定页码(支持 1-3,5,8 写法)合成新 PDF。文件不上传服务器。" />
+<meta name="keywords" content="PDF拆分,在线PDF拆分,PDF提取页面,PDF分割,PDF按页拆分,pdf提取指定页" />
+<meta name="robots" content="index,follow" />
+<meta name="theme-color" content="#2f6bff" />
+<link rel="canonical" href="https://tuqingsong.pages.dev/t/pdf-split.html" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="图轻松" />
+<meta property="og:title" content="PDF 拆分与提取页 - 按页拆开或提取指定页,免费在线" />
+<meta property="og:description" content="免费在线 PDF 拆分工具:把 PDF 每页拆成单独文件打包下载,或提取指定页码(支持 1-3,5,8 写法)合成新 PDF。文件不上传服务器。" />
+<meta property="og:url" content="https://tuqingsong.pages.dev/t/pdf-split.html" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"PDF 拆分","url":"https://tuqingsong.pages.dev/t/pdf-split.html","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"免费在线 PDF 拆分工具:把 PDF 每页拆成单独文件打包下载,或提取指定页码(支持 1-3,5,8 写法)合成新 PDF。文件不上传服务器。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"页码写错了会怎样?","acceptedAnswer":{"@type":"Answer","text":"超出总页数的页码会被忽略,不会报错。如果最终没有任何有效页码,工具会提示你该 PDF 一共几页。"}},{"@type":"Question","name":"拆分后画质会变吗?","acceptedAnswer":{"@type":"Answer","text":"不会。页面是原样搬运的,不重新编码。"}},{"@type":"Question","name":"加密 PDF 能拆吗?","acceptedAnswer":{"@type":"Answer","text":"不能,工具会明确提示文件可能已加密或损坏。"}},{"@type":"Question","name":"每页拆成单独文件是什么格式?","acceptedAnswer":{"@type":"Answer","text":"输出一个 ZIP 压缩包,里面是每一页单独一个 PDF,文件名形如 xxx_第01页.pdf。"}}]}</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+background:radial-gradient(900px 500px at 15% -10%,rgba(47,107,255,.07),transparent 60%),#f4f7fc;
+color:#16233f;line-height:1.85;padding:0 0 60px}
+header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(15,23,42,.06);
+padding:14px 22px;position:sticky;top:0;z-index:9}
+header a{color:#16233f;text-decoration:none;font-weight:800;font-size:17px}
+header a::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+background:linear-gradient(135deg,#2f6bff,#5b8cff);margin-right:8px;vertical-align:1px}
+main{max-width:760px;margin:0 auto;padding:34px 20px}
+h1{font-size:27px;line-height:1.4;margin-bottom:14px;letter-spacing:-.3px}
+.lead{font-size:16px;color:#455468;margin-bottom:22px}
+.cta{display:inline-block;background:linear-gradient(135deg,#2f6bff,#5b8cff);color:#fff;text-decoration:none;
+padding:13px 30px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 8px 22px rgba(47,107,255,.28);
+margin:6px 0 8px;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta-note{font-size:13px;color:#6b7a94;margin-bottom:30px}
+h2{font-size:19px;margin:30px 0 10px;padding-left:11px;border-left:4px solid #2f6bff}
+h3{font-size:15px;margin:18px 0 6px;color:#2f6bff}
+p{margin:10px 0;color:#2c3a52}
+ol,ul{padding-left:22px;margin:10px 0}
+li{margin:7px 0;color:#2c3a52}
+.steps{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:18px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.steps li{margin:9px 0}
+.faq{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:6px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.faq dt{font-weight:700;margin:16px 0 4px}
+.faq dd{color:#455468;margin-bottom:16px;font-size:14px}
+.privacy{background:linear-gradient(135deg,rgba(47,107,255,.06),rgba(0,180,216,.06));
+border:1px solid rgba(47,107,255,.18);border-radius:14px;padding:16px 20px;margin:26px 0;font-size:14px}
+.privacy b{color:#2f6bff}
+.others{margin-top:36px;padding-top:22px;border-top:1px solid #e2e8f2}
+.others h2{border:none;padding:0;font-size:15px;color:#6b7a94;margin-bottom:12px}
+.others a{display:inline-block;background:#fff;border:1px solid #e2e8f2;border-radius:9px;
+padding:7px 14px;margin:0 8px 8px 0;color:#2c3a52;text-decoration:none;font-size:13px;transition:.15s}
+.others a:hover{border-color:#2f6bff;color:#2f6bff}
+footer{max-width:760px;margin:40px auto 0;padding:20px;color:#6b7a94;font-size:12.5px;text-align:center;
+border-top:1px solid #e2e8f2}
+@media(max-width:600px){h1{font-size:22px}main{padding:24px 16px}}
+</style>
+</head>
+<body>
+<header><a href="/">图轻松</a></header>
+<main>
+  <h1>PDF 拆分</h1>
+  <p class="lead">把一个 PDF 拆开:可以提取指定几页,也可以每页拆成单独文件。</p>
+  <a class="cta" href="/?tool=pdfsplit">免费使用 →</a>
+  <p class="cta-note">不用注册,不用安装,打开就能用。</p>
+
+  <h2>两种模式,对应两类需求</h2>
+  <p>「提取指定页」适合从一份大文件里挑出你要的部分,比如从 50 页的文档里抽出第 3、7、8 页。合成出来的是一份新 PDF。「每页拆成单独文件」适合把一份合并材料拆散,比如把扫描好的多合一文件拆成一个个单页文件,输出的是一个 ZIP 压缩包。</p>
+  <h2>页码怎么写</h2>
+  <p>支持很宽松的写法:1-3 表示第 1 到第 3 页;1,3,5 表示这三页;1-3,5,8 可以混着写;甚至写成 3-1 也会自动纠正顺序。逗号可以是英文逗号、中文逗号或顿号,区间符号用 - 或 ~ 都行。留空则代表全部页。超范围的页码会被自动忽略。</p>
+  <h2>为什么本地处理对这些文件尤其重要</h2>
+  <p>被拆分的 PDF 往往是合同、报告、证明材料。上传到第三方服务器去拆,等于把完整文件交给了别人。这里全程在浏览器完成。</p>
+
+  <h2>怎么用</h2>
+  <div class="steps"><ol>
+    <li>拖入一个 PDF</li>
+    <li>选「提取指定页」并填写页码(如 1-3,5),或选「每页拆成单独 PDF」</li>
+    <li>点「开始拆分」</li>
+    <li>提取模式下载一个 PDF;每页拆分模式下载一个 ZIP</li>
+  </ol></div>
+
+  <div class="privacy">
+    <b>文件不上传服务器。</b>这个页面对应的功能全部在你的浏览器里完成,文件不会发送到任何服务器,
+    断网也能用。你可以打开浏览器开发者工具的 Network 面板自己验证。
+  </div>
+
+  <h2>常见问题</h2>
+  <dl class="faq">
+    <dt>页码写错了会怎样?</dt>
+    <dd>超出总页数的页码会被忽略,不会报错。如果最终没有任何有效页码,工具会提示你该 PDF 一共几页。</dd>
+    <dt>拆分后画质会变吗?</dt>
+    <dd>不会。页面是原样搬运的,不重新编码。</dd>
+    <dt>加密 PDF 能拆吗?</dt>
+    <dd>不能,工具会明确提示文件可能已加密或损坏。</dd>
+    <dt>每页拆成单独文件是什么格式?</dt>
+    <dd>输出一个 ZIP 压缩包,里面是每一页单独一个 PDF,文件名形如 xxx_第01页.pdf。</dd>
+  </dl>
+
+  <a class="cta" href="/?tool=pdfsplit">免费使用 PDF 拆分 →</a>
+
+  <div class="others">
+    <h2>其他工具</h2>
+    <a href="/t/image-compress.html">图片压缩</a>
+    <a href="/t/remove-exif.html">照片隐私清除</a>
+    <a href="/t/pdf-merge.html">PDF 合并</a>
+    <a href="/t/pdf-watermark.html">PDF 加水印</a>
+    <a href="/t/image-to-pdf.html">图片转 PDF</a>
+    <a href="/t/image-watermark.html">图片加水印</a>
+    <a href="/t/pdf-stamp.html">PDF 盖章</a>
+    <a href="/t/pdf-page-number.html">PDF 加页码</a>
+    <a href="/t/pdf-organize.html">PDF 页面管理</a>
+    <a href="/t/image-resize.html">图片改尺寸</a>
+    <a href="/t/image-convert.html">图片格式转换</a>
+    <a href="/t/image-crop.html">图片裁剪</a>
+    <a href="/">全部 18 个工具</a>
+  </div>
+</main>
+<footer>图轻松 · 图片与 PDF 工具,全部在浏览器本地处理,文件不上传服务器</footer>
+</body>
+</html>

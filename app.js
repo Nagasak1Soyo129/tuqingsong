@@ -3234,8 +3234,18 @@ async function initAuth() {
   refreshAuthUI();
 }
 
+// 支持 ?tool=xxx 深链:每个工具的落地页点「免费使用」可直接打开对应工具
+function toolFromUrl() {
+  try {
+    const t = new URLSearchParams(location.search).get('tool');
+    if (!t) return null;
+    const safe = t.replace(/[^a-z0-9]/g, '');
+    return document.querySelector('.tool-tab[data-view="' + safe + '"]') ? safe : null;
+  } catch (e) { return null; }
+}
+
 initAuth();
-switchTool('compress');
+switchTool(toolFromUrl() || 'compress');
 updateRotateStatus();
 updateCropStatus();
 updateSplitRangeField();

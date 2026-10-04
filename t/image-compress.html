@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>在线图片压缩 - 免费压到指定大小(如 200KB),图片不上传服务器</title>
+<meta name="description" content="免费在线图片压缩工具,可按质量压缩,也可直接指定目标大小(如 200KB、500KB)。全部在浏览器本地完成,图片不上传服务器,免注册即用。" />
+<meta name="keywords" content="图片压缩,在线图片压缩,图片压缩到200kb,压缩图片大小,图片压缩工具,jpg压缩,png压缩" />
+<meta name="robots" content="index,follow" />
+<meta name="theme-color" content="#2f6bff" />
+<link rel="canonical" href="https://tuqingsong.pages.dev/t/image-compress.html" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="图轻松" />
+<meta property="og:title" content="在线图片压缩 - 免费压到指定大小(如 200KB),图片不上传服务器" />
+<meta property="og:description" content="免费在线图片压缩工具,可按质量压缩,也可直接指定目标大小(如 200KB、500KB)。全部在浏览器本地完成,图片不上传服务器,免注册即用。" />
+<meta property="og:url" content="https://tuqingsong.pages.dev/t/image-compress.html" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"图片压缩","url":"https://tuqingsong.pages.dev/t/image-compress.html","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"免费在线图片压缩工具,可按质量压缩,也可直接指定目标大小(如 200KB、500KB)。全部在浏览器本地完成,图片不上传服务器,免注册即用。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"压缩会损失画质吗?","acceptedAnswer":{"@type":"Answer","text":"JPG / WebP 是有损格式,压缩必然会损失一些细节。工具会尽量在目标体积内保住画质。如果要求完全无损,请选择 PNG 输出(但 PNG 体积通常更大)。"}},{"@type":"Question","name":"我的图片会被上传吗?","acceptedAnswer":{"@type":"Answer","text":"不会。整个压缩过程在你的浏览器里完成,图片一个字节都不会离开你的设备。你可以打开浏览器开发者工具的 Network 面板,处理几张图,会看到除了网页本身没有任何上传请求。甚至可以断网使用。"}},{"@type":"Question","name":"能一次压多张吗?","acceptedAnswer":{"@type":"Answer","text":"可以。批量处理是支持者的功能,免费用户一次处理一张。"}},{"@type":"Question","name":"支持哪些格式?","acceptedAnswer":{"@type":"Answer","text":"输入支持 JPG / PNG / WebP 等浏览器能解码的常见格式;输出可选 JPG 或 WebP。"}}]}</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+background:radial-gradient(900px 500px at 15% -10%,rgba(47,107,255,.07),transparent 60%),#f4f7fc;
+color:#16233f;line-height:1.85;padding:0 0 60px}
+header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(15,23,42,.06);
+padding:14px 22px;position:sticky;top:0;z-index:9}
+header a{color:#16233f;text-decoration:none;font-weight:800;font-size:17px}
+header a::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+background:linear-gradient(135deg,#2f6bff,#5b8cff);margin-right:8px;vertical-align:1px}
+main{max-width:760px;margin:0 auto;padding:34px 20px}
+h1{font-size:27px;line-height:1.4;margin-bottom:14px;letter-spacing:-.3px}
+.lead{font-size:16px;color:#455468;margin-bottom:22px}
+.cta{display:inline-block;background:linear-gradient(135deg,#2f6bff,#5b8cff);color:#fff;text-decoration:none;
+padding:13px 30px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 8px 22px rgba(47,107,255,.28);
+margin:6px 0 8px;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta-note{font-size:13px;color:#6b7a94;margin-bottom:30px}
+h2{font-size:19px;margin:30px 0 10px;padding-left:11px;border-left:4px solid #2f6bff}
+h3{font-size:15px;margin:18px 0 6px;color:#2f6bff}
+p{margin:10px 0;color:#2c3a52}
+ol,ul{padding-left:22px;margin:10px 0}
+li{margin:7px 0;color:#2c3a52}
+.steps{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:18px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.steps li{margin:9px 0}
+.faq{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:6px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.faq dt{font-weight:700;margin:16px 0 4px}
+.faq dd{color:#455468;margin-bottom:16px;font-size:14px}
+.privacy{background:linear-gradient(135deg,rgba(47,107,255,.06),rgba(0,180,216,.06));
+border:1px solid rgba(47,107,255,.18);border-radius:14px;padding:16px 20px;margin:26px 0;font-size:14px}
+.privacy b{color:#2f6bff}
+.others{margin-top:36px;padding-top:22px;border-top:1px solid #e2e8f2}
+.others h2{border:none;padding:0;font-size:15px;color:#6b7a94;margin-bottom:12px}
+.others a{display:inline-block;background:#fff;border:1px solid #e2e8f2;border-radius:9px;
+padding:7px 14px;margin:0 8px 8px 0;color:#2c3a52;text-decoration:none;font-size:13px;transition:.15s}
+.others a:hover{border-color:#2f6bff;color:#2f6bff}
+footer{max-width:760px;margin:40px auto 0;padding:20px;color:#6b7a94;font-size:12.5px;text-align:center;
+border-top:1px solid #e2e8f2}
+@media(max-width:600px){h1{font-size:22px}main{padding:24px 16px}}
+</style>
+</head>
+<body>
+<header><a href="/">图轻松</a></header>
+<main>
+  <h1>图片压缩</h1>
+  <p class="lead">把图片体积压小,画质尽量保住。可以直接填「压到 200KB」这种目标值,不用自己一遍遍试。</p>
+  <a class="cta" href="/?tool=compress">免费使用 →</a>
+  <p class="cta-note">不用注册,不用安装,打开就能用。</p>
+
+  <h2>为什么需要指定目标大小</h2>
+  <p>很多场合对图片大小是有硬性要求的:考试报名、教师资格证、事业单位报名常要求 20KB~200KB,电商平台对主图有上限,邮件附件也有总量限制。普通的压缩工具只给你一个&quot;质量&quot;滑块,你得自己反复拖动、导出、看大小、再调 —— 而这里可以直接填目标值,程序会自动二分搜索出最接近的质量。</p>
+  <h2>和常见在线压缩工具的区别</h2>
+  <p>你在搜索引擎里找到的大部分在线图片压缩,流程都是「上传到他们服务器 → 服务器压缩 → 传回给你」。这意味着你的图片实实在在地离开了你的设备,并且会在别人机器上停留。证件照、身份证、合同、病历这类图片,真的适合传上去吗?这个工具全程在你的浏览器里跑,断网都能用。</p>
+  <h2>什么时候该用哪个模式</h2>
+  <p>如果你只是想让图小一点、画质不要太差,用质量滑块就够了。如果对方给了明确的体积上限(比如&quot;不超过 200KB&quot;),就用目标大小模式,它会尽量贴近这个上限,不会为了压小把画质砍得太狠。</p>
+
+  <h2>怎么用</h2>
+  <div class="steps"><ol>
+    <li>把图片拖进页面(或点击选择)</li>
+    <li>想按质量压就拖滑块;想压到指定大小就在「目标大小」里填数字,比如 200</li>
+    <li>选择输出格式(JPG 通常体积更小,WebP 更小但兼容性略差)</li>
+    <li>点「开始压缩」,下载结果</li>
+  </ol></div>
+
+  <div class="privacy">
+    <b>文件不上传服务器。</b>这个页面对应的功能全部在你的浏览器里完成,文件不会发送到任何服务器,
+    断网也能用。你可以打开浏览器开发者工具的 Network 面板自己验证。
+  </div>
+
+  <h2>常见问题</h2>
+  <dl class="faq">
+    <dt>压缩会损失画质吗?</dt>
+    <dd>JPG / WebP 是有损格式,压缩必然会损失一些细节。工具会尽量在目标体积内保住画质。如果要求完全无损,请选择 PNG 输出(但 PNG 体积通常更大)。</dd>
+    <dt>我的图片会被上传吗?</dt>
+    <dd>不会。整个压缩过程在你的浏览器里完成,图片一个字节都不会离开你的设备。你可以打开浏览器开发者工具的 Network 面板,处理几张图,会看到除了网页本身没有任何上传请求。甚至可以断网使用。</dd>
+    <dt>能一次压多张吗?</dt>
+    <dd>可以。批量处理是支持者的功能,免费用户一次处理一张。</dd>
+    <dt>支持哪些格式?</dt>
+    <dd>输入支持 JPG / PNG / WebP 等浏览器能解码的常见格式;输出可选 JPG 或 WebP。</dd>
+  </dl>
+
+  <a class="cta" href="/?tool=compress">免费使用 图片压缩 →</a>
+
+  <div class="others">
+    <h2>其他工具</h2>
+    <a href="/t/remove-exif.html">照片隐私清除</a>
+    <a href="/t/pdf-merge.html">PDF 合并</a>
+    <a href="/t/pdf-split.html">PDF 拆分</a>
+    <a href="/t/pdf-watermark.html">PDF 加水印</a>
+    <a href="/t/image-to-pdf.html">图片转 PDF</a>
+    <a href="/t/image-watermark.html">图片加水印</a>
+    <a href="/t/pdf-stamp.html">PDF 盖章</a>
+    <a href="/t/pdf-page-number.html">PDF 加页码</a>
+    <a href="/t/pdf-organize.html">PDF 页面管理</a>
+    <a href="/t/image-resize.html">图片改尺寸</a>
+    <a href="/t/image-convert.html">图片格式转换</a>
+    <a href="/t/image-crop.html">图片裁剪</a>
+    <a href="/">全部 18 个工具</a>
+  </div>
+</main>
+<footer>图轻松 · 图片与 PDF 工具,全部在浏览器本地处理,文件不上传服务器</footer>
+</body>
+</html>

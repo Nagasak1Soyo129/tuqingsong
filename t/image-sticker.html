@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>图片贴纸 - 给图片加标签角标,包邮热卖新品,可拖动定位</title>
+<meta name="description" content="免费在线图片贴纸工具。内置 emoji 与电商常用角标(包邮、热卖、新品、特价、已验等),也可上传自己的图片,可拖动到任意位置。" />
+<meta name="keywords" content="图片贴纸,给图片加标签,电商角标,包邮标签,图片加图标,商品图打标" />
+<meta name="robots" content="index,follow" />
+<meta name="theme-color" content="#2f6bff" />
+<link rel="canonical" href="https://tuqingsong.pages.dev/t/image-sticker.html" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="图轻松" />
+<meta property="og:title" content="图片贴纸 - 给图片加标签角标,包邮热卖新品,可拖动定位" />
+<meta property="og:description" content="免费在线图片贴纸工具。内置 emoji 与电商常用角标(包邮、热卖、新品、特价、已验等),也可上传自己的图片,可拖动到任意位置。" />
+<meta property="og:url" content="https://tuqingsong.pages.dev/t/image-sticker.html" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"图片贴纸","url":"https://tuqingsong.pages.dev/t/image-sticker.html","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"免费在线图片贴纸工具。内置 emoji 与电商常用角标(包邮、热卖、新品、特价、已验等),也可上传自己的图片,可拖动到任意位置。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"贴纸能放多个吗?","acceptedAnswer":{"@type":"Answer","text":"一次贴一个。需要多个可以先贴一个保存,再对结果贴下一个。"}},{"@type":"Question","name":"支持透明背景的贴纸吗?","acceptedAnswer":{"@type":"Answer","text":"支持,PNG 的透明区域会保留。"}},{"@type":"Question","name":"图片会被上传吗?","acceptedAnswer":{"@type":"Answer","text":"不会,全程在浏览器本地完成。"}}]}</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+background:radial-gradient(900px 500px at 15% -10%,rgba(47,107,255,.07),transparent 60%),#f4f7fc;
+color:#16233f;line-height:1.85;padding:0 0 60px}
+header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(15,23,42,.06);
+padding:14px 22px;position:sticky;top:0;z-index:9}
+header a{color:#16233f;text-decoration:none;font-weight:800;font-size:17px}
+header a::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+background:linear-gradient(135deg,#2f6bff,#5b8cff);margin-right:8px;vertical-align:1px}
+main{max-width:760px;margin:0 auto;padding:34px 20px}
+h1{font-size:27px;line-height:1.4;margin-bottom:14px;letter-spacing:-.3px}
+.lead{font-size:16px;color:#455468;margin-bottom:22px}
+.cta{display:inline-block;background:linear-gradient(135deg,#2f6bff,#5b8cff);color:#fff;text-decoration:none;
+padding:13px 30px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 8px 22px rgba(47,107,255,.28);
+margin:6px 0 8px;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta-note{font-size:13px;color:#6b7a94;margin-bottom:30px}
+h2{font-size:19px;margin:30px 0 10px;padding-left:11px;border-left:4px solid #2f6bff}
+h3{font-size:15px;margin:18px 0 6px;color:#2f6bff}
+p{margin:10px 0;color:#2c3a52}
+ol,ul{padding-left:22px;margin:10px 0}
+li{margin:7px 0;color:#2c3a52}
+.steps{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:18px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.steps li{margin:9px 0}
+.faq{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:6px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.faq dt{font-weight:700;margin:16px 0 4px}
+.faq dd{color:#455468;margin-bottom:16px;font-size:14px}
+.privacy{background:linear-gradient(135deg,rgba(47,107,255,.06),rgba(0,180,216,.06));
+border:1px solid rgba(47,107,255,.18);border-radius:14px;padding:16px 20px;margin:26px 0;font-size:14px}
+.privacy b{color:#2f6bff}
+.others{margin-top:36px;padding-top:22px;border-top:1px solid #e2e8f2}
+.others h2{border:none;padding:0;font-size:15px;color:#6b7a94;margin-bottom:12px}
+.others a{display:inline-block;background:#fff;border:1px solid #e2e8f2;border-radius:9px;
+padding:7px 14px;margin:0 8px 8px 0;color:#2c3a52;text-decoration:none;font-size:13px;transition:.15s}
+.others a:hover{border-color:#2f6bff;color:#2f6bff}
+footer{max-width:760px;margin:40px auto 0;padding:20px;color:#6b7a94;font-size:12.5px;text-align:center;
+border-top:1px solid #e2e8f2}
+@media(max-width:600px){h1{font-size:22px}main{padding:24px 16px}}
+</style>
+</head>
+<body>
+<header><a href="/">图轻松</a></header>
+<main>
+  <h1>图片贴纸</h1>
+  <p class="lead">给图片贴上「包邮」「热卖」这类角标,或者 emoji 装饰。位置可以拖。</p>
+  <a class="cta" href="/?tool=sticker">免费使用 →</a>
+  <p class="cta-note">不用注册,不用安装,打开就能用。</p>
+
+  <h2>内置的电商角标</h2>
+  <p>电商卖家用得最多的是角标:包邮、热卖、新品、特价、已验、现货、正品、限时。这些已经做好了,点一下就能用,配色也已经区分开,不需要自己画。</p>
+  <h2>emoji 装饰</h2>
+  <p>内置了一批 emoji 贴纸(星星、爱心、火焰、点赞、灯泡等),适合做轻量的装饰或者标注重点。</p>
+  <h2>也能用自己的图</h2>
+  <p>如果你有自己的贴纸图片(比如店铺 Logo、专属标签),可以上传使用。大小、旋转角度、透明度、位置都可以调,位置支持直接拖动。</p>
+  <h2>角标为什么有效</h2>
+  <p>在电商图片里,角标的作用是让人「一眼看到重点」。用户滑动商品列表时停留时间很短,一张标着「包邮」「已验」的主图,通常比纯产品图更容易被点开。角标不必做得很精致,关键是位置醒目、和主图有颜色对比 —— 所以默认放在右下角,大小约占图宽 20%。</p>
+
+  <h2>怎么用</h2>
+  <div class="steps"><ol>
+    <li>拖入图片</li>
+    <li>在贴纸库里点选一个,或上传自己的图片</li>
+    <li>在预览里拖动到想要的位置</li>
+    <li>调整大小、角度、透明度</li>
+    <li>点「贴上贴纸」并下载</li>
+  </ol></div>
+
+  <div class="privacy">
+    <b>文件不上传服务器。</b>这个页面对应的功能全部在你的浏览器里完成,文件不会发送到任何服务器,
+    断网也能用。你可以打开浏览器开发者工具的 Network 面板自己验证。
+  </div>
+
+  <h2>常见问题</h2>
+  <dl class="faq">
+    <dt>贴纸能放多个吗?</dt>
+    <dd>一次贴一个。需要多个可以先贴一个保存,再对结果贴下一个。</dd>
+    <dt>支持透明背景的贴纸吗?</dt>
+    <dd>支持,PNG 的透明区域会保留。</dd>
+    <dt>图片会被上传吗?</dt>
+    <dd>不会,全程在浏览器本地完成。</dd>
+  </dl>
+
+  <a class="cta" href="/?tool=sticker">免费使用 图片贴纸 →</a>
+
+  <div class="others">
+    <h2>其他工具</h2>
+    <a href="/t/image-compress.html">图片压缩</a>
+    <a href="/t/remove-exif.html">照片隐私清除</a>
+    <a href="/t/pdf-merge.html">PDF 合并</a>
+    <a href="/t/pdf-split.html">PDF 拆分</a>
+    <a href="/t/pdf-watermark.html">PDF 加水印</a>
+    <a href="/t/image-to-pdf.html">图片转 PDF</a>
+    <a href="/t/image-watermark.html">图片加水印</a>
+    <a href="/t/pdf-stamp.html">PDF 盖章</a>
+    <a href="/t/pdf-page-number.html">PDF 加页码</a>
+    <a href="/t/pdf-organize.html">PDF 页面管理</a>
+    <a href="/t/image-resize.html">图片改尺寸</a>
+    <a href="/t/image-convert.html">图片格式转换</a>
+    <a href="/">全部 18 个工具</a>
+  </div>
+</main>
+<footer>图轻松 · 图片与 PDF 工具,全部在浏览器本地处理,文件不上传服务器</footer>
+</body>
+</html>

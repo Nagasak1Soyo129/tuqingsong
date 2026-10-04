@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>图片调色与滤镜 - 亮度、对比度、饱和度、黑白复古,免费在线</title>
+<meta name="description" content="免费在线图片调色工具。调整亮度、对比度、饱和度,一键黑白、复古、反色滤镜。纯浏览器本地处理,图片不上传服务器。" />
+<meta name="keywords" content="图片调色,在线调色,图片滤镜,亮度对比度调整,图片黑白,复古滤镜,照片调色" />
+<meta name="robots" content="index,follow" />
+<meta name="theme-color" content="#2f6bff" />
+<link rel="canonical" href="https://tuqingsong.pages.dev/t/image-adjust.html" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="图轻松" />
+<meta property="og:title" content="图片调色与滤镜 - 亮度、对比度、饱和度、黑白复古,免费在线" />
+<meta property="og:description" content="免费在线图片调色工具。调整亮度、对比度、饱和度,一键黑白、复古、反色滤镜。纯浏览器本地处理,图片不上传服务器。" />
+<meta property="og:url" content="https://tuqingsong.pages.dev/t/image-adjust.html" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"图片调色","url":"https://tuqingsong.pages.dev/t/image-adjust.html","applicationCategory":"MultimediaApplication","operatingSystem":"Web","description":"免费在线图片调色工具。调整亮度、对比度、饱和度,一键黑白、复古、反色滤镜。纯浏览器本地处理,图片不上传服务器。","offers":{"@type":"Offer","price":"0","priceCurrency":"CNY"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"调色会损失画质吗?","acceptedAnswer":{"@type":"Answer","text":"会重新编码一次,所以选高质量输出可以尽量减少损失。但它不改变图片尺寸。"}},{"@type":"Question","name":"能同时用多个滤镜吗?","acceptedAnswer":{"@type":"Answer","text":"可以,黑白、复古、反色可以叠加。"}},{"@type":"Question","name":"图片会被上传吗?","acceptedAnswer":{"@type":"Answer","text":"不会,全程在浏览器本地完成。"}}]}</script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+background:radial-gradient(900px 500px at 15% -10%,rgba(47,107,255,.07),transparent 60%),#f4f7fc;
+color:#16233f;line-height:1.85;padding:0 0 60px}
+header{background:rgba(255,255,255,.85);backdrop-filter:blur(12px);border-bottom:1px solid rgba(15,23,42,.06);
+padding:14px 22px;position:sticky;top:0;z-index:9}
+header a{color:#16233f;text-decoration:none;font-weight:800;font-size:17px}
+header a::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;
+background:linear-gradient(135deg,#2f6bff,#5b8cff);margin-right:8px;vertical-align:1px}
+main{max-width:760px;margin:0 auto;padding:34px 20px}
+h1{font-size:27px;line-height:1.4;margin-bottom:14px;letter-spacing:-.3px}
+.lead{font-size:16px;color:#455468;margin-bottom:22px}
+.cta{display:inline-block;background:linear-gradient(135deg,#2f6bff,#5b8cff);color:#fff;text-decoration:none;
+padding:13px 30px;border-radius:12px;font-weight:700;font-size:16px;box-shadow:0 8px 22px rgba(47,107,255,.28);
+margin:6px 0 8px;transition:transform .15s}
+.cta:hover{transform:translateY(-2px)}
+.cta-note{font-size:13px;color:#6b7a94;margin-bottom:30px}
+h2{font-size:19px;margin:30px 0 10px;padding-left:11px;border-left:4px solid #2f6bff}
+h3{font-size:15px;margin:18px 0 6px;color:#2f6bff}
+p{margin:10px 0;color:#2c3a52}
+ol,ul{padding-left:22px;margin:10px 0}
+li{margin:7px 0;color:#2c3a52}
+.steps{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:18px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.steps li{margin:9px 0}
+.faq{background:#fff;border:1px solid #e2e8f2;border-radius:14px;padding:6px 22px;margin:14px 0;
+box-shadow:0 2px 12px rgba(31,67,130,.05)}
+.faq dt{font-weight:700;margin:16px 0 4px}
+.faq dd{color:#455468;margin-bottom:16px;font-size:14px}
+.privacy{background:linear-gradient(135deg,rgba(47,107,255,.06),rgba(0,180,216,.06));
+border:1px solid rgba(47,107,255,.18);border-radius:14px;padding:16px 20px;margin:26px 0;font-size:14px}
+.privacy b{color:#2f6bff}
+.others{margin-top:36px;padding-top:22px;border-top:1px solid #e2e8f2}
+.others h2{border:none;padding:0;font-size:15px;color:#6b7a94;margin-bottom:12px}
+.others a{display:inline-block;background:#fff;border:1px solid #e2e8f2;border-radius:9px;
+padding:7px 14px;margin:0 8px 8px 0;color:#2c3a52;text-decoration:none;font-size:13px;transition:.15s}
+.others a:hover{border-color:#2f6bff;color:#2f6bff}
+footer{max-width:760px;margin:40px auto 0;padding:20px;color:#6b7a94;font-size:12.5px;text-align:center;
+border-top:1px solid #e2e8f2}
+@media(max-width:600px){h1{font-size:22px}main{padding:24px 16px}}
+</style>
+</head>
+<body>
+<header><a href="/">图轻松</a></header>
+<main>
+  <h1>图片调色</h1>
+  <p class="lead">调亮度、对比度、饱和度,或者一键套用黑白、复古、反色。</p>
+  <a class="cta" href="/?tool=adjust">免费使用 →</a>
+  <p class="cta-note">不用注册,不用安装,打开就能用。</p>
+
+  <h2>三个基础参数</h2>
+  <p>亮度控制整体明暗;对比度控制明暗差异,调高会更有&quot;通透感&quot;但过高会丢失细节;饱和度控制颜色鲜艳程度,调到 0 就是黑白。这三项组合能解决大部分&quot;照片发灰&quot;&quot;颜色偏淡&quot;的问题。</p>
+  <h2>一键滤镜</h2>
+  <p>黑白适合文字截图和需要突出构图的场景;复古(褐色调)适合怀旧风格;反色会把颜色取反,常用于制作特殊效果或查看某些图像细节。滤镜可以和参数叠加使用。</p>
+  <h2>什么时候用得上</h2>
+  <p>手机拍的文档偏灰、看不清字,可以拉高对比度和亮度;商品图颜色偏淡,可以提高饱和度;需要给设计稿做黑白版本,一键即可。</p>
+  <h2>和手机修图 App 有什么不同</h2>
+  <p>手机修图 App 通常是一整套流程:导入、套滤镜、反复调整、导出,还可能要求相册权限、把图片传到云端做「智能优化」。如果你只是想给一张图提亮一点、或者转成黑白,走完整套很重。这里打开网页、拖进图片、拉两下滑块、下载,就结束了 —— 不装 App、不授权相册、图片不出设备。</p>
+
+  <h2>怎么用</h2>
+  <div class="steps"><ol>
+    <li>拖入图片</li>
+    <li>拖动亮度 / 对比度 / 饱和度滑块,或点选滤镜</li>
+    <li>点「开始调色」</li>
+    <li>下载结果</li>
+  </ol></div>
+
+  <div class="privacy">
+    <b>文件不上传服务器。</b>这个页面对应的功能全部在你的浏览器里完成,文件不会发送到任何服务器,
+    断网也能用。你可以打开浏览器开发者工具的 Network 面板自己验证。
+  </div>
+
+  <h2>常见问题</h2>
+  <dl class="faq">
+    <dt>调色会损失画质吗?</dt>
+    <dd>会重新编码一次,所以选高质量输出可以尽量减少损失。但它不改变图片尺寸。</dd>
+    <dt>能同时用多个滤镜吗?</dt>
+    <dd>可以,黑白、复古、反色可以叠加。</dd>
+    <dt>图片会被上传吗?</dt>
+    <dd>不会,全程在浏览器本地完成。</dd>
+  </dl>
+
+  <a class="cta" href="/?tool=adjust">免费使用 图片调色 →</a>
+
+  <div class="others">
+    <h2>其他工具</h2>
+    <a href="/t/image-compress.html">图片压缩</a>
+    <a href="/t/remove-exif.html">照片隐私清除</a>
+    <a href="/t/pdf-merge.html">PDF 合并</a>
+    <a href="/t/pdf-split.html">PDF 拆分</a>
+    <a href="/t/pdf-watermark.html">PDF 加水印</a>
+    <a href="/t/image-to-pdf.html">图片转 PDF</a>
+    <a href="/t/image-watermark.html">图片加水印</a>
+    <a href="/t/pdf-stamp.html">PDF 盖章</a>
+    <a href="/t/pdf-page-number.html">PDF 加页码</a>
+    <a href="/t/pdf-organize.html">PDF 页面管理</a>
+    <a href="/t/image-resize.html">图片改尺寸</a>
+    <a href="/t/image-convert.html">图片格式转换</a>
+    <a href="/">全部 18 个工具</a>
+  </div>
+</main>
+<footer>图轻松 · 图片与 PDF 工具,全部在浏览器本地处理,文件不上传服务器</footer>
+</body>
+</html>
