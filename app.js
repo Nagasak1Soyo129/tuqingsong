@@ -662,21 +662,25 @@ const POS_MAP = {
 };
 
 // 九宫格选择器:点一下选中,互斥高亮
-function bindPosGrid(grid) {
+function bindPosGrid(grid, onPick) {
   if (!grid) return;
   grid.querySelectorAll('.pos-cell').forEach((cell) => {
     cell.addEventListener('click', () => {
       grid.querySelectorAll('.pos-cell').forEach((c) => c.classList.remove('active'));
       cell.classList.add('active');
+      if (onPick) onPick(cell.dataset.pos);
     });
   });
 }
-function getPos(grid) {
-  const a = grid && grid.querySelector('.pos-cell.active');
-  return a ? a.dataset.pos : 'br';
+// 拖动自由定位后,九宫格高亮就不再准确,清掉避免误导
+function clearPosGrid(grid) {
+  if (grid) grid.querySelectorAll('.pos-cell').forEach((c) => c.classList.remove('active'));
 }
+// getPos 已被 OVERLAY_POS 归一化坐标取代
 
 // 按九宫格把一张图叠到 canvas 上(可旋转、半透明)
+// o.x / o.y 是叠加物「中心」的归一化坐标(0~1),可自由放到任意位置。
+// 用中心而不用左上角:换不同尺寸的图时,中心位置保持一致,不会「跑偏」。
 function overlayOnCanvas(ctx, W, H, img, o) {
   let w = W * (o.widthPct / 100);
   let h = w * (img.height / img.width);
@@ -685,23 +689,33 @@ function overlayOnCanvas(ctx, W, H, img, o) {
   w *= k;
   h *= k;
 
-  // 边距按各自的轴算:横向按宽、纵向按高。
-  // 若两个轴都用宽度,全景图上竖直边距会大得离谱,把元素顶出画布
-  const mx = W * (o.marginPct / 100);
-  const my = H * (o.marginPct / 100);
-  const [col, row] = POS_MAP[o.pos] || POS_MAP.br;
-  let x = col === 0 ? mx : col === 2 ? W - mx - w : (W - w) / 2;
-  let y = row === 0 ? my : row === 2 ? H - my - h : (H - h) / 2;
-  // 边距和尺寸都拉满时可能算出负坐标,钳住保证不跑出画布
-  x = Math.max(0, Math.min(x, W - w));
-  y = Math.max(0, Math.min(y, H - h));
+  let cx = (o.x === undefined ? 0.78 : o.x) * W;
+  let cy = (o.y === undefined ? 0.78 : o.y) * H;
+  // 钳住中心,保证整个叠加物不跑出画布
+  cx = Math.max(w / 2, Math.min(cx, W - w / 2));
+  cy = Math.max(h / 2, Math.min(cy, H - h / 2));
 
   ctx.save();
   ctx.globalAlpha = o.opacity / 100;
-  ctx.translate(x + w / 2, y + h / 2);
+  ctx.translate(cx, cy);
   ctx.rotate((o.angle || 0) * Math.PI / 180);
   ctx.drawImage(img, -w / 2, -h / 2, w, h);
   ctx.restore();
+}
+
+// 九宫格(快捷位置)→ 归一化中心坐标。marginPct 是距边的比例。
+function gridToCenter(pos, W, H, overlayAspect, widthPct, marginPct) {
+  const w = W * (widthPct / 100);
+  const h = w / (overlayAspect || 1); // overlayAspect = 宽/高
+  const mx = W * (marginPct / 100);
+  const my = H * (marginPct / 100);
+  const [col, row] = POS_MAP[pos] || POS_MAP.br;
+  const x0 = col === 0 ? mx : col === 2 ? W - mx - w : (W - w) / 2;
+  const y0 = row === 0 ? my : row === 2 ? H - my - h : (H - h) / 2;
+  return {
+    x: Math.max(0.001, Math.min(0.999, (x0 + w / 2) / W)),
+    y: Math.max(0.001, Math.min(0.999, (y0 + h / 2) / H)),
+  };
 }
 
 // 平铺整张图(防截图最有效)
@@ -810,6 +824,173 @@ function buildStickerGrid() {
     });
     stickerGrid.appendChild(b);
   });
+}
+
+// ============================================================
+// 叠加物自由定位:预览画布 + 拖动
+// ============================================================
+// 归一化中心坐标(0~1),两种工具各存一份
+const OVERLAY_POS = {
+  watermark: { x: 0.78, y: 0.78 },
+  sticker: { x: 0.78, y: 0.78 },
+};
+const PREVIEW_W = 640;          // 预览画布的逻辑宽度(高度按底图比例算)
+
+let pvBaseFile = null;          // 预览底图对应的文件
+let pvBaseImg = null;           // 预览底图
+const pvAssetCache = {};        // { watermark: {key, img}, sticker: {...} }
+
+function pvEls(which) {
+  return which === 'watermark'
+    ? { cv: $('#wmPreview'), coord: $('#wmCoord'), grid: wmPosGrid }
+    : { cv: $('#stickerPreview'), coord: $('#stickerCoord'), grid: stickerPosGrid };
+}
+
+// 预览底图 = 已选的第一张图
+async function getPreviewBase() {
+  const f = state.files.find(isImageFile) || state.files[0];
+  if (!f) { pvBaseFile = null; pvBaseImg = null; return null; }
+  if (pvBaseFile === f && pvBaseImg) return pvBaseImg;
+  try {
+    const img = await loadFile(f);
+    pvBaseFile = f; pvBaseImg = img;
+    return img;
+  } catch (e) {
+    pvBaseFile = null; pvBaseImg = null;
+    return null;
+  }
+}
+
+// 当前要叠加的素材(水印素材 / 贴纸)
+async function getOverlayAsset(which) {
+  if (which === 'watermark') return buildWatermarkAsset();
+  const up = stickerImage.files && stickerImage.files[0];
+  if (up) return dataUrlToImage(await fileToDataURL(up));
+  if (stickerDataUrls[stickerPick]) return dataUrlToImage(stickerDataUrls[stickerPick]);
+  return null;
+}
+
+// 当前的样式参数
+function overlayStyle(which) {
+  const p = OVERLAY_POS[which];
+  if (which === 'watermark') {
+    return {
+      x: p.x, y: p.y,
+      widthPct: parseInt(wmScale.value, 10),
+      opacity: parseInt(wmOpacity.value, 10),
+      angle: parseInt(wmAngle.value, 10),
+      tiled: wmTile.checked,
+    };
+  }
+  return {
+    x: p.x, y: p.y,
+    widthPct: parseInt(stickerScale.value, 10),
+    opacity: parseInt(stickerOpacity.value, 10),
+    angle: parseInt(stickerAngle.value, 10),
+    tiled: false,
+  };
+}
+
+let pvRenderToken = 0;
+async function renderPreview(which) {
+  const { cv, coord } = pvEls(which);
+  if (!cv) return;
+  const token = ++pvRenderToken;
+  const base = await getPreviewBase();
+  if (token !== pvRenderToken) return; // 期间又触发了新渲染,丢弃这次
+
+  const W = PREVIEW_W;
+  const H = base ? Math.round(W * base.height / base.width) : Math.round(W * 0.625);
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+
+  if (!base) {
+    ctx.fillStyle = '#f2f6fc';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#8a97ab';
+    ctx.font = '20px "PingFang SC", "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('先在下方选择一张图片,这里就会显示预览', W / 2, H / 2);
+    if (coord) coord.textContent = '';
+    return;
+  }
+
+  ctx.drawImage(base, 0, 0, W, H); // 先画底图
+  const st = overlayStyle(which);
+  let asset = null;
+  try { asset = await getOverlayAsset(which); } catch (e) { asset = null; }
+  if (token !== pvRenderToken) return;
+
+  pvAssetCache[which] = { img: asset };
+  if (asset) {
+    if (st.tiled) {
+      tileOnCanvas(ctx, W, H, asset, st);
+      if (coord) coord.textContent = '平铺模式:位置不可调,整张图重复铺满';
+    } else {
+      overlayOnCanvas(ctx, W, H, asset, st);
+      if (coord) coord.textContent = `位置:横向 ${Math.round(st.x * 100)}% · 纵向 ${Math.round(st.y * 100)}%`;
+    }
+  } else if (coord) {
+    coord.textContent = which === 'watermark' ? '还没有水印内容(输入文字或选择图片)' : '还没有选择贴纸';
+  }
+}
+
+function setOverlayPos(which, x, y) {
+  const p = OVERLAY_POS[which];
+  p.x = Math.max(0.001, Math.min(0.999, x));
+  p.y = Math.max(0.001, Math.min(0.999, y));
+  renderPreview(which);
+}
+
+// 预览上拖动 = 移动叠加物
+function bindPreviewDrag(cv, which) {
+  if (!cv) return;
+  let dragging = false;
+  const norm = (e) => {
+    const r = cv.getBoundingClientRect();
+    return {
+      x: (e.clientX - r.left) / r.width,
+      y: (e.clientY - r.top) / r.height,
+    };
+  };
+  cv.addEventListener('pointerdown', (e) => {
+    if (!pvBaseImg) return;
+    clearPosGrid(pvEls(which).grid); // 自由定位后九宫格高亮不再准确
+    dragging = true;
+    cv.classList.add('dragging');
+    try { cv.setPointerCapture(e.pointerId); } catch (err) {}
+    const p = norm(e);
+    setOverlayPos(which, p.x, p.y);
+    e.preventDefault();
+  });
+  cv.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const p = norm(e);
+    setOverlayPos(which, p.x, p.y);
+    e.preventDefault();
+  });
+  const stop = (e) => {
+    if (!dragging) return;
+    dragging = false;
+    cv.classList.remove('dragging');
+  };
+  cv.addEventListener('pointerup', stop);
+  cv.addEventListener('pointercancel', stop);
+}
+
+// 点九宫格 = 直接用预设位置覆盖当前坐标
+function applyGridPreset(which, pos) {
+  const base = pvBaseImg;
+  const W = PREVIEW_W;
+  const H = base ? W * base.height / base.width : W * 0.625;
+  let aspect = 1;
+  const asset = pvAssetCache[which] && pvAssetCache[which].img;
+  if (asset && asset.width) aspect = asset.width / asset.height;
+  const st = overlayStyle(which);
+  const marginPct = which === 'watermark' ? parseInt(wmMargin.value, 10) : parseInt(stickerMargin.value, 10);
+  const c = gridToCenter(pos, W, H, aspect, st.widthPct, marginPct);
+  setOverlayPos(which, c.x, c.y);
 }
 
 // ============================================================
@@ -1009,11 +1190,11 @@ async function watermarkOne(file) {
   const asset = await buildWatermarkAsset();
   if (!asset) throw new Error('没有可用的水印内容');
   const o = {
-    pos: getPos(wmPosGrid),
+    x: OVERLAY_POS.watermark.x,
+    y: OVERLAY_POS.watermark.y,
     widthPct: parseInt(wmScale.value, 10),
     opacity: parseInt(wmOpacity.value, 10),
     angle: parseInt(wmAngle.value, 10),
-    marginPct: parseInt(wmMargin.value, 10),
   };
   const ctx = cv.getContext('2d');
   if (wmTile.checked) tileOnCanvas(ctx, cv.width, cv.height, asset, o);
@@ -1034,11 +1215,11 @@ async function stickerOne(file) {
   if (!asset) throw new Error('没有可用的贴纸');
 
   overlayOnCanvas(cv.getContext('2d'), cv.width, cv.height, asset, {
-    pos: getPos(stickerPosGrid),
+    x: OVERLAY_POS.sticker.x,
+    y: OVERLAY_POS.sticker.y,
     widthPct: parseInt(stickerScale.value, 10),
     opacity: parseInt(stickerOpacity.value, 10),
     angle: parseInt(stickerAngle.value, 10),
-    marginPct: parseInt(stickerMargin.value, 10),
   });
   const blob = await canvasToBlob(cv, outMime(file), qualityCap());
   if (!blob) throw new Error('生成图片失败');
@@ -2116,8 +2297,40 @@ function updateWmFields() {
 wmType.addEventListener('change', updateWmFields);
 
 // 九宫格 + 贴纸库初始化
-bindPosGrid(wmPosGrid);
-bindPosGrid(stickerPosGrid);
+bindPosGrid(wmPosGrid, (pos) => applyGridPreset('watermark', pos));
+bindPosGrid(stickerPosGrid, (pos) => applyGridPreset('sticker', pos));
+bindPreviewDrag(document.getElementById('wmPreview'), 'watermark');
+bindPreviewDrag(document.getElementById('stickerPreview'), 'sticker');
+
+// 改任何一项参数都立刻反映到预览上
+function bindPreviewInputs() {
+  const wmEls = [wmType, wmText, wmSize, wmColor, wmBold, wmScale, wmAngle, wmOpacity, wmMargin, wmTile, wmImage];
+  const stEls = [stickerImage, stickerScale, stickerAngle, stickerOpacity, stickerMargin];
+  ['input', 'change'].forEach((ev) => {
+    wmEls.forEach((el) => el && el.addEventListener(ev, () => renderPreview('watermark')));
+    stEls.forEach((el) => el && el.addEventListener(ev, () => renderPreview('sticker')));
+  });
+  // 内置贴纸是点选,单独监听
+  if (stickerGrid) stickerGrid.addEventListener('click', () => renderPreview('sticker'));
+  // 重置按钮
+  const rw = document.getElementById('wmPosReset');
+  const rs = document.getElementById('stickerPosReset');
+  if (rw) rw.addEventListener('click', () => {
+    OVERLAY_POS.watermark = { x: 0.78, y: 0.78 };
+    clearPosGrid(wmPosGrid);
+    const c = wmPosGrid && wmPosGrid.querySelector('[data-pos="br"]');
+    if (c) c.classList.add('active');
+    renderPreview('watermark');
+  });
+  if (rs) rs.addEventListener('click', () => {
+    OVERLAY_POS.sticker = { x: 0.78, y: 0.78 };
+    clearPosGrid(stickerPosGrid);
+    const c = stickerPosGrid && stickerPosGrid.querySelector('[data-pos="br"]');
+    if (c) c.classList.add('active');
+    renderPreview('sticker');
+  });
+}
+bindPreviewInputs();
 // 贴纸库不在这里生成:20 张贴纸要建 20 个 canvas + 20 次 toDataURL,
 // 而多数访客根本不会打开贴纸工具。改成第一次切到该工具时才建。
 let stickerBuilt = false;
@@ -2226,6 +2439,8 @@ function revokeThumbs() {
 
 function renderFileBar() {
   const n = state.files.length;
+  // 底图变了,预览要跟着换(异步,不阻塞渲染)
+  setTimeout(() => { pvBaseFile = null; renderPreview('watermark'); renderPreview('sticker'); }, 0);
   const pdfMode = isPdfTool(state.view);
   const canReorder = state.view === 'pdfmerge' && n > 1;
   fileBar.hidden = n === 0;

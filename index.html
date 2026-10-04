@@ -220,7 +220,7 @@
       </div>
       <label class="tp-check"><input type="checkbox" id="wmTile" /> 平铺整张图(防截图盗用,最有效)</label>
       <div class="pos-wrap">
-        <span class="pos-label">位置</span>
+        <span class="pos-label">快捷位置</span>
         <div class="pos-grid" id="wmPosGrid">
           <button type="button" class="pos-cell" data-pos="tl" title="左上"></button>
           <button type="button" class="pos-cell" data-pos="tc" title="上中"></button>
@@ -233,6 +233,16 @@
           <button type="button" class="pos-cell active" data-pos="br" title="右下"></button>
         </div>
       </div>
+
+      <div class="ov-preview-wrap">
+        <div class="ov-preview-head">
+          <span>预览 · <b>直接拖动水印</b>放到任意位置</span>
+          <button type="button" class="btn-ghost btn-sm" id="wmPosReset">回到右下</button>
+        </div>
+        <canvas id="wmPreview" class="ov-preview"></canvas>
+        <p class="ov-coord" id="wmCoord"></p>
+      </div>
+
       <button class="btn-primary" data-process="watermark">添加水印</button>
     </section>
 
@@ -269,7 +279,7 @@
       </div>
 
       <div class="pos-wrap">
-        <span class="pos-label">位置</span>
+        <span class="pos-label">快捷位置</span>
         <div class="pos-grid" id="stickerPosGrid">
           <button type="button" class="pos-cell" data-pos="tl"></button>
           <button type="button" class="pos-cell" data-pos="tc"></button>
@@ -282,6 +292,16 @@
           <button type="button" class="pos-cell active" data-pos="br"></button>
         </div>
       </div>
+
+      <div class="ov-preview-wrap">
+        <div class="ov-preview-head">
+          <span>预览 · <b>直接拖动贴纸</b>放到任意位置</span>
+          <button type="button" class="btn-ghost btn-sm" id="stickerPosReset">回到右下</button>
+        </div>
+        <canvas id="stickerPreview" class="ov-preview"></canvas>
+        <p class="ov-coord" id="stickerCoord"></p>
+      </div>
+
       <button class="btn-primary" data-process="sticker">贴上贴纸</button>
     </section>
 

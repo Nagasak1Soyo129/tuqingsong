@@ -418,6 +418,37 @@ main {
 }
 .tp-check input { width: auto; accent-color: var(--accent); cursor: pointer; }
 
+/* 叠加物预览(拖动定位) */
+.ov-preview-wrap { margin: 0 0 20px; }
+.ov-preview-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.ov-preview-head b { color: var(--accent); }
+.ov-preview {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background:
+    linear-gradient(45deg, #eef2f8 25%, transparent 25%, transparent 75%, #eef2f8 75%),
+    linear-gradient(45deg, #eef2f8 25%, #fff 25%, #fff 75%, #eef2f8 75%);
+  background-size: 18px 18px;
+  background-position: 0 0, 9px 9px;
+  cursor: grab;
+  touch-action: none;
+  transition: border-color .18s, box-shadow .18s;
+}
+.ov-preview:hover { border-color: var(--accent); }
+.ov-preview.dragging { cursor: grabbing; box-shadow: 0 0 0 3px rgba(47, 107, 255, 0.18); }
+.ov-coord { margin-top: 6px; font-size: 12px; color: var(--muted); min-height: 16px; }
+
 /* 贴纸选择器 */
 .sticker-grid {
   display: grid;
