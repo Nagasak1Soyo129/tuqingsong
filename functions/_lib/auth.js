@@ -49,8 +49,28 @@ export async function hashPassword(password, salt) {
 }
 
 // 是否有效支持者:长期(premium === true)或支持期未过(premiumUntil > 现在)
+// 注意必须用 !! 收敛成布尔:没有 premiumUntil 时 `undefined && ...` 会得到
+// undefined,而 JSON.stringify 会把 undefined 字段整个丢掉 ——
+// 那样 /api/me 返回的用户对象里根本没有 premium 字段。
 export function isPremium(u) {
-  return u.premium === true || (u.premiumUntil && u.premiumUntil > Date.now());
+  return u.premium === true || !!(u.premiumUntil && u.premiumUntil > Date.now());
+}
+
+// 是否「断过」:买过但已经过期。
+// TU Plan(¥5.5/月)只给「连续」的用户 —— 没买过的算新用户(有资格),
+// 一旦断掉就要按单月 ¥9.9 才能续。
+export function hasLapsed(u) {
+  // 长期支持者不会「断」,哪怕记录里还留着旧的 premiumUntil
+  // (先买月卡、后来激活长期码的用户就会是这种状态)
+  if (u.premium === true) return false;
+  const until = Number(u.premiumUntil) || 0;
+  return until > 0 && until <= Date.now();
+}
+
+// TU Plan 资格:没断过就是「连续」。长期支持者不需要再买,返回 false。
+export function tuPlanEligible(u) {
+  if (u.premium === true) return false;
+  return !hasLapsed(u);
 }
 
 // 只暴露给前端的用户字段(绝不返回密码哈希/盐)
@@ -60,6 +80,8 @@ export function publicUser(u) {
     email: u.email || null,
     premium: isPremium(u),
     premiumUntil: u.premiumUntil || null,
+    lapsed: hasLapsed(u),
+    tuPlan: tuPlanEligible(u),
     admin: !!u.admin,
   };
 }

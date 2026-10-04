@@ -16,7 +16,7 @@
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="图轻松" />
   <meta property="og:title" content="图轻松 - 免费的在线图片压缩、PDF 合并加水印工具" />
-  <meta property="og:description" content="图片和 PDF 全部在你的浏览器里处理,不上传服务器。免费、无广告、免注册。" />
+  <meta property="og:description" content="图片和 PDF 全部在你的浏览器里处理,不上传服务器。免费使用,免注册。" />
   <meta property="og:url" content="https://tuqingsong.pages.dev/" />
   <meta name="twitter:card" content="summary" />
 
@@ -408,7 +408,6 @@
         </div>
       </div>
       <button class="btn-primary" data-process="collage">开始拼图</button>
-      <p class="tp-lock" id="collageLock" hidden>🔒 拼图需要 2 张以上图片,<a class="link-upgrade" id="collageUpgrade">支持我们即可解锁</a></p>
     </section>
 
     <!-- ============ 转 PDF ============ -->
@@ -441,7 +440,6 @@
         </div>
       </div>
       <button class="btn-primary" data-process="pdfmerge">开始合并</button>
-      <p class="tp-lock" id="pdfmergeLock" hidden>🔒 合并需要 2 个以上 PDF,<a class="link-upgrade" id="pdfmergeUpgrade">支持我们即可解锁</a></p>
     </section>
 
     <!-- ============ PDF 拆分 ============ -->
@@ -461,7 +459,6 @@
         </div>
       </div>
       <button class="btn-primary" data-process="pdfsplit">开始拆分</button>
-      <p class="tp-lock" id="pdfsplitLock" hidden>🔒 「每页拆成单独 PDF」会输出多个文件,<a class="link-upgrade" id="pdfsplitUpgrade">支持我们即可解锁</a></p>
     </section>
 
     <!-- ============ PDF 水印 ============ -->
@@ -635,13 +632,13 @@
     <div class="modal-box">
       <button class="modal-close" id="closeModal">×</button>
       <h2>请支持我们</h2>
-      <p class="modal-sub">图轻松一直<strong>免费、无广告、图片不上传服务器</strong>。如果它帮到了你,欢迎请我们喝杯咖啡。</p>
+      <p class="modal-sub">图轻松一直<strong>免费、图片不上传服务器</strong>。如果它帮到了你,欢迎请我们喝杯咖啡。</p>
 
       <div class="plans">
-        <div class="plan hot">
-          <div class="plan-name">包月 <span class="plan-note">到期提醒,一键续</span></div>
+        <div class="plan hot" id="tuPlanCard">
+          <div class="plan-name">TU Plan <span class="plan-note" id="tuPlanNote">连续支持价</span></div>
           <div class="plan-price">¥5.5<span>/月</span></div>
-          <button class="btn-plan" data-plan="month5">支持</button>
+          <button class="btn-plan" data-plan="month5" id="tuPlanBtn">支持</button>
         </div>
         <div class="plan">
           <div class="plan-name">单月 <span class="plan-note">用一个月就走</span></div>
@@ -660,8 +657,9 @@
         </div>
       </div>
 
-      <p class="plans-why">
-        包月便宜是因为默认你会一直用下去 —— 到期前我们会提醒你,点一下就能续。
+      <p class="plans-why" id="tuPlanWhy">
+        <b>TU Plan ¥5.5/月</b> 是给持续支持的用户的价 —— 只要不断,就一直按这个价续。
+        中断之后恢复按单月 ¥9.9 计算。
       </p>
 
       <p class="support-note">支持后,以下功能会一并解锁 —— 算是我们的一点谢意:<br /><b>批量处理 · 高清原画质输出 · 拼图 · PDF 合并</b></p>

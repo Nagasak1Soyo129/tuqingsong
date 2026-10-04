@@ -6,7 +6,7 @@
 //   XH_GATEWAY      (可选)网关地址,默认 https://api.xunhupay.com
 // 存储:KV `order:{tradeOrderId}` = { tradeOrderId, username, plan, fee, days, status, createdAt }
 
-import { json, getUserByToken, randomHex } from '../../_lib/auth';
+import { json, getUserByToken, randomHex, tuPlanEligible, hasLapsed } from '../../_lib/auth';
 import { sign, nonceStr } from '../../_lib/xunhu';
 
 // title 会显示在支付平台的账单上,刻意用「支持」的说法,弱化商业感
@@ -34,6 +34,15 @@ export async function onRequestPost(context) {
   try { body = await request.json(); } catch {}
   const plan = PLANS[body.plan];
   if (!plan) return json({ ok: false, msg: '套餐无效' }, 400);
+
+  // TU Plan 价只给「连续支持」的用户。必须在服务端拦 ——
+  // 只在前端隐藏按钮的话,改一下请求就能用 ¥5.5 买到。
+  if (body.plan === 'month5' && hasLapsed(auth.user)) {
+    return json({
+      ok: false,
+      msg: 'TU Plan 价只对连续支持有效,你的支持已中断,恢复需按单月 ¥9.9 续。',
+    }, 400);
+  }
 
   const appid = env.XH_APPID;
   const secret = env.XH_SECRET;

@@ -114,18 +114,12 @@ const filterReset = $('#filterReset');
 // 拼图
 const collageLayout = $('#collageLayout');
 const collageGap = $('#collageGap');
-const collageLock = $('#collageLock');
-const collageUpgrade = $('#collageUpgrade');
 // PDF 合并 / 拆分
 const mergeName = $('#mergeName');
-const pdfmergeLock = $('#pdfmergeLock');
-const pdfmergeUpgrade = $('#pdfmergeUpgrade');
 const splitInfo = $('#splitInfo');
 const splitMode = $('#splitMode');
 const splitRange = $('#splitRange');
 const splitRangeField = $('#splitRangeField');
-const pdfsplitLock = $('#pdfsplitLock');
-const pdfsplitUpgrade = $('#pdfsplitUpgrade');
 // PDF 水印
 const pdfwmType = $('#pdfwmType');
 const pdfwmTextField = $('#pdfwmTextField');
@@ -243,7 +237,8 @@ function refreshAuthUI() {
     upgradeBtn.style.background = '';
   }
   adminBtn.hidden = !isAdmin();
-  updateCollageLock();
+  updateLockBanners();
+  updateTuPlanCard();
   updateRenewBar();
 }
 
@@ -2288,6 +2283,7 @@ function switchTool(view) {
 
   if (view === 'sticker') ensureStickerGrid();
   renderFileBar();
+  updateLockBanners();
   refreshPdfPanels();
 }
 
@@ -2295,19 +2291,77 @@ document.querySelectorAll('.tool-tab').forEach((tab) => {
   tab.addEventListener('click', () => switchTool(tab.dataset.view));
 });
 
-function updateCollageLock() {
-  collageLock.hidden = state.premium;
+// 免费版锁住的工具:拼图 + 全部 PDF 工具
+const FREE_LOCKED = ['collage', 'pdfmerge', 'pdfsplit', 'pdfwatermark', 'pdfpagenum', 'pdfpages', 'pdfstamp'];
+function isLocked(view) {
+  return !state.premium && FREE_LOCKED.includes(view);
 }
-collageUpgrade.addEventListener('click', () => { upgradeModal.hidden = false; });
 
-// PDF 工具的门控提示
-function updateProcessLocks() {
-  if (!pdfmergeLock) return;
-  pdfmergeLock.hidden = state.premium;
-  pdfsplitLock.hidden = state.premium;
+// TU Plan 卡片:按「是否断过」显示不同状态。
+// 注意这只是显示层 —— 真正的拦截在服务端(pay/order.js),
+// 否则改一下请求就能用 ¥5.5 买到。
+function updateTuPlanCard() {
+  const card = document.getElementById('tuPlanCard');
+  const note = document.getElementById('tuPlanNote');
+  const btn = document.getElementById('tuPlanBtn');
+  const why = document.getElementById('tuPlanWhy');
+  if (!card || !note || !btn) return;
+
+  const u = state.user;
+  const lapsed = !!(u && u.lapsed);
+
+  if (lapsed) {
+    card.classList.add('plan-dead');
+    note.textContent = '已中断 · 恢复价 ¥9.9';
+    btn.textContent = '已失效';
+    btn.disabled = true;
+    if (why) {
+      why.innerHTML = '<b>你的 TU Plan 已中断。</b>按规则中断后恢复按单月 ¥9.9 续 —— ' +
+        '选下面的「单月」即可恢复;恢复后再连续支持,下次仍可按 TU Plan 价续。';
+    }
+  } else {
+    card.classList.remove('plan-dead');
+    note.textContent = u && u.premium ? '续期价' : '连续支持价';
+    btn.textContent = '支持';
+    btn.disabled = false;
+    if (why) {
+      why.innerHTML = '<b>TU Plan ¥5.5/月</b> 是给持续支持的用户的价 —— 只要不断,就一直按这个价续。' +
+        '中断之后恢复按单月 ¥9.9 计算。';
+    }
+  }
 }
-pdfmergeUpgrade.addEventListener('click', () => { upgradeModal.hidden = false; });
-pdfsplitUpgrade.addEventListener('click', () => { upgradeModal.hidden = false; });
+
+function showUpgrade() {
+  const msg = document.getElementById('activateMsg');
+  if (msg) { msg.textContent = ''; msg.className = 'activate-msg'; }
+  upgradeModal.hidden = false;
+}
+
+// 给锁住的工具面板挂提示条,并在工具标签上打个小锁
+function updateLockBanners() {
+  document.querySelectorAll('.tool-panel').forEach((panel) => {
+    const old = panel.querySelector('.mode-lock');
+    if (old) old.remove();
+    if (!isLocked(panel.dataset.panel)) return;
+    const b = document.createElement('p');
+    b.className = 'tp-lock mode-lock';
+    b.innerHTML = '🔒 这个功能需要支持后使用 —— <a class="link-upgrade">解锁</a>';
+    b.querySelector('a').addEventListener('click', showUpgrade);
+    panel.appendChild(b);
+  });
+  document.querySelectorAll('.tool-tab').forEach((tab) => {
+    const locked = isLocked(tab.dataset.view);
+    let mark = tab.querySelector('.tab-lock');
+    if (locked && !mark) {
+      mark = document.createElement('span');
+      mark.className = 'tab-lock';
+      mark.textContent = '🔒';
+      tab.appendChild(mark);
+    } else if (!locked && mark) {
+      mark.remove();
+    }
+  });
+}
 
 // 拆分方式切换:只有「提取指定页」需要填页码范围
 function updateSplitRangeField() {
@@ -2477,7 +2531,7 @@ function renderFileBar() {
   fileBar.hidden = n === 0;
   revokeThumbs();
   thumbList.innerHTML = '';
-  updateProcessLocks();
+  updateLockBanners();
   if (!n) {
     fileCount.textContent = '';
     return;
@@ -2606,6 +2660,8 @@ document.addEventListener('keydown', (e) => {
 
 // 各工具「开始」按钮
 async function onProcess(process) {
+  // 免费版锁住的工具直接引导,不继续
+  if (isLocked(process)) { showUpgrade(); return; }
   // 只在真的点了处理按钮时记一次「工具使用」,比记录页面停留在哪个标签有意义
   track('use', process);
   if (!state.files.length) { alert('请先选择图片'); return; }
@@ -2655,7 +2711,7 @@ document.querySelectorAll('[data-process]').forEach((btn) => {
 });
 
 // 支持我们 弹窗
-upgradeBtn.addEventListener('click', () => { upgradeModal.hidden = false; });
+upgradeBtn.addEventListener('click', () => { updateTuPlanCard(); upgradeModal.hidden = false; });
 closeModal.addEventListener('click', () => { upgradeModal.hidden = true; });
 upgradeModal.addEventListener('click', (e) => {
   if (e.target === upgradeModal) upgradeModal.hidden = true;
@@ -2717,6 +2773,7 @@ genBtn.addEventListener('click', generateCodes);
 // 一键续费:直接打开支持弹窗,省得用户自己找入口
 if (renewBtn) {
   renewBtn.addEventListener('click', () => {
+    updateTuPlanCard();
     upgradeModal.hidden = false;
     const msg = document.getElementById('activateMsg');
     if (msg) { msg.textContent = ''; msg.className = 'activate-msg'; }
