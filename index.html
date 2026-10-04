@@ -36,6 +36,7 @@
     "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" },
     "featureList": [
       "图片压缩到指定大小", "图片格式转换", "图片加水印", "图片调色滤镜", "图片拼图",
+      "照片 EXIF 隐私信息清除", "去除照片 GPS 定位",
       "PDF 合并", "PDF 拆分提取页", "PDF 加水印", "PDF 加页码", "PDF 盖章签名"
     ]
   }
@@ -58,6 +59,7 @@
       <li>调色滤镜 —— 亮度、对比度、饱和度、黑白、复古</li>
       <li>拼图 —— 横向、纵向、网格、九宫格</li>
       <li>图片转 PDF、图片转 Base64</li>
+      <li>照片隐私信息查看与清除 —— 去掉照片里的 GPS 定位、设备型号、拍摄时间</li>
     </ul>
     <h2>PDF 工具</h2>
     <ul>
@@ -93,6 +95,7 @@
     <button class="tool-tab" data-view="collage">拼图<span class="tab-tag">支持</span></button>
     <button class="tool-tab" data-view="topdf">转PDF</button>
     <button class="tool-tab" data-view="tobase64">转Base64</button>
+    <button class="tool-tab" data-view="exif">隐私</button>
     <span class="toolbar-sep" aria-hidden="true"></span>
     <button class="tool-tab" data-view="pdfmerge">PDF合并<span class="tab-tag">支持</span></button>
     <button class="tool-tab" data-view="pdfsplit">PDF拆分</button>
@@ -613,6 +616,26 @@
         </div>
       </div>
       <button class="btn-primary" data-process="pdfstamp">插入图片</button>
+    </section>
+
+    <!-- ============ EXIF 隐私 ============ -->
+    <section class="tool-panel" data-panel="exif" hidden>
+      <div class="tp-head">
+        <h2>照片隐私信息</h2>
+        <p>手机拍的照片里藏着 <b>GPS 定位、设备型号、拍摄时间</b>。发到网上等于把位置一起发出去。</p>
+      </div>
+
+      <div id="exifEmpty" class="exif-empty">先在上方选择一张照片,这里会列出它携带的隐私信息。</div>
+
+      <div id="exifInfo" hidden>
+        <div id="exifGps" class="exif-alert" hidden></div>
+        <div class="exif-list" id="exifList"></div>
+      </div>
+
+      <div class="exif-actions" id="exifActions" hidden>
+        <button class="btn-primary" data-process="exifclean">清除信息并下载</button>
+        <span class="muted">清除后的图片画质完全不变,只是去掉了这些隐藏信息</span>
+      </div>
     </section>
 
     <!-- 结果区 -->

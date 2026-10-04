@@ -166,6 +166,11 @@ const stampMargin = $('#stampMargin');
 const stampMarginVal = $('#stampMarginVal');
 const stampPages = $('#stampPages');
 // Base64
+const exifEmpty = $('#exifEmpty');
+const exifInfo = $('#exifInfo');
+const exifGps = $('#exifGps');
+const exifList = $('#exifList');
+const exifActions = $('#exifActions');
 const b64Result = $('#b64Result');
 const b64Text = $('#b64Text');
 const b64Copy = $('#b64Copy');
@@ -1020,6 +1025,269 @@ function applyGridPreset(which, pos) {
 }
 
 // ============================================================
+// EXIF 照片隐私信息:读取与清除
+// 纯手写解析,不引任何库。
+// 手机拍的照片会把 GPS 坐标、设备型号、拍摄时间写进 JPEG 的 APP1 段,
+// 结构是 TIFF 的 IFD(目录项)表 —— 按规范读出来即可。
+// 清除时直接把这些段从文件里摘掉,图像数据一个字节都不重编码,画质无损。
+// ============================================================
+
+const EXIF_NAMES = {
+  0x010F: '设备品牌', 0x0110: '设备型号', 0x0112: '方向', 0x0131: '处理软件',
+  0x0132: '修改时间', 0x9003: '拍摄时间', 0x9004: '数字化时间',
+  0x829A: '曝光时间', 0x829D: '光圈', 0x8827: 'ISO', 0x920A: '焦距',
+  0x9209: '闪光灯', 0xA002: '像素宽', 0xA003: '像素高', 0x9286: '备注',
+  0x9291: '亚秒时间', 0xA430: '拍摄者', 0xA431: '机身序列号', 0xA432: '镜头参数',
+  0xA433: '镜头品牌', 0xA434: '镜头型号', 0x011A: '横向分辨率', 0x011B: '纵向分辨率',
+  0x0000: 'GPS版本', 0x0001: '纬度方向', 0x0002: '纬度', 0x0003: '经度方向',
+  0x0004: '经度', 0x0005: '海拔方向', 0x0006: '海拔', 0x0007: 'GPS时间',
+  0x001D: 'GPS日期',
+};
+const EXIF_TYPE_SIZE = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 7: 1, 9: 4, 10: 8 };
+
+function concatBytes(list) {
+  let n = 0;
+  for (const a of list) n += a.length;
+  const out = new Uint8Array(n);
+  let o = 0;
+  for (const a of list) { out.set(a, o); o += a.length; }
+  return out;
+}
+
+// 解析 TIFF 结构,返回 IFD 读取器;失败返回 null(不是所有 JPEG 都有 EXIF)
+function makeTiffReader(bytes, base, len) {
+  if (len < 8) return null;
+  const dv = new DataView(bytes.buffer, bytes.byteOffset + base, len);
+  const bo = dv.getUint16(0, false);
+  const little = bo === 0x4949 ? true : bo === 0x4D4D ? false : null;
+  if (little === null) return null;
+  if (dv.getUint16(2, little) !== 0x002A) return null;
+
+  const readIFD = (off) => {
+    if (off < 0 || off + 2 > len) return [];
+    const n = dv.getUint16(off, little);
+    const out = [];
+    for (let i = 0; i < n; i++) {
+      const e = off + 2 + i * 12;
+      if (e + 12 > len) break;
+      out.push({
+        tag: dv.getUint16(e, little),
+        type: dv.getUint16(e + 2, little),
+        count: dv.getUint32(e + 4, little),
+        at: e + 8,
+      });
+    }
+    return out;
+  };
+  const nextIFD = (off) => {
+    const n = dv.getUint16(off, little);
+    const p = off + 2 + n * 12;
+    return p + 4 <= len ? dv.getUint32(p, little) : 0;
+  };
+  const valueOf = (ent) => {
+    const size = (EXIF_TYPE_SIZE[ent.type] || 1) * ent.count;
+    let off = ent.at;
+    if (size > 4) {
+      off = dv.getUint32(ent.at, little);
+      if (off + size > len) return null;
+    }
+    try {
+      switch (ent.type) {
+        case 2: { // ASCII / UTF-8
+          const slice = new Uint8Array(dv.buffer, dv.byteOffset + off, Math.min(ent.count, 512));
+          let s = new TextDecoder('utf-8').decode(slice);
+          return s.replace(/\0+$/, '').trim();
+        }
+        case 1: case 7: {
+          const a = [];
+          for (let i = 0; i < Math.min(ent.count, 32); i++) a.push(dv.getUint8(off + i));
+          return a.length === 1 ? a[0] : a;
+        }
+        case 3: {
+          if (ent.count === 1) return dv.getUint16(off, little);
+          const a = [];
+          for (let i = 0; i < Math.min(ent.count, 16); i++) a.push(dv.getUint16(off + i * 2, little));
+          return a;
+        }
+        case 4: {
+          if (ent.count === 1) return dv.getUint32(off, little);
+          const a = [];
+          for (let i = 0; i < Math.min(ent.count, 16); i++) a.push(dv.getUint32(off + i * 4, little));
+          return a;
+        }
+        case 5: case 10: {
+          const a = [];
+          for (let i = 0; i < Math.min(ent.count, 16); i++) {
+            const nu = ent.type === 5 ? dv.getUint32(off + i * 8, little) : dv.getInt32(off + i * 8, little);
+            const de = ent.type === 5 ? dv.getUint32(off + i * 8 + 4, little) : dv.getInt32(off + i * 8 + 4, little);
+            a.push(de === 0 ? nu : nu / de);
+          }
+          return a.length === 1 ? a[0] : a;
+        }
+      }
+    } catch (e) { return null; }
+    return null;
+  };
+  return { readIFD, nextIFD, valueOf };
+}
+
+// 从 JPEG 字节里读出 EXIF(返回 {items:[{k,v}], gps:{lat,lng}|null, raw:bool})
+function parseJpegExif(bytes) {
+  if (bytes.length < 4 || bytes[0] !== 0xFF || bytes[1] !== 0xD8) return null;
+  let p = 2;
+  let app1 = null;
+  while (p + 4 <= bytes.length) {
+    if (bytes[p] !== 0xFF) break;
+    const m = bytes[p + 1];
+    if (m === 0xD8 || (m >= 0xD0 && m <= 0xD7) || m === 0x01 || m === 0xFF) { p += 2; continue; }
+    if (m === 0xDA || m === 0xD9) break;
+    const len = (bytes[p + 2] << 8) | bytes[p + 3];
+    if (len < 2) break;
+    if (m === 0xE1 && len > 8) {
+      // 段数据以 "Exif\0\0" 开头
+      if (bytes[p + 4] === 0x45 && bytes[p + 5] === 0x78 && bytes[p + 6] === 0x69 &&
+          bytes[p + 7] === 0x66 && bytes[p + 8] === 0x00 && bytes[p + 9] === 0x00) {
+        app1 = { start: p + 10, len: len - 8 };
+        break;
+      }
+    }
+    p += 2 + len;
+  }
+  if (!app1) return null;
+
+  const R = makeTiffReader(bytes, app1.start, app1.len);
+  if (!R) return { items: [], gps: null, raw: true };
+
+  const items = [];
+  const seen = new Set();
+  const push = (tag, v) => {
+    if (v === null || v === undefined || v === '') return;
+    const name = EXIF_NAMES[tag];
+    if (!name) return;
+    let val = v;
+    if (Array.isArray(v)) val = v.map((x) => (typeof x === 'number' ? Math.round(x * 1000) / 1000 : x)).join(', ');
+    if (tag === 0x829A && typeof v === 'number') val = v >= 1 ? v + ' 秒' : '1/' + Math.round(1 / v) + ' 秒';
+    if (tag === 0x829D && typeof v === 'number') val = 'f/' + (Math.round(v * 10) / 10);
+    if (tag === 0x920A && typeof v === 'number') val = Math.round(v) + ' mm';
+    if (tag === 0x0132 || tag === 0x9003 || tag === 0x9004) {
+      val = String(v).replace(/^(\d{4}):(\d{2}):(\d{2})/, '$1-$2-$3');
+    }
+    const key = name + '|' + val;
+    if (seen.has(key)) return;
+    seen.add(key);
+    items.push({ k: name, v: String(val) });
+  };
+
+  try {
+    // IFD0 的偏移要按 TIFF 自己的字节序来读
+    const dv0 = new DataView(bytes.buffer, bytes.byteOffset + app1.start, app1.len);
+    const little = dv0.getUint16(0, false) === 0x4949;
+    const ifd0Off = dv0.getUint32(4, little);
+    let subExif = 0, subGps = 0;
+    for (const e of R.readIFD(ifd0Off)) {
+      if (e.tag === 0x8769) subExif = R.valueOf(e);
+      else if (e.tag === 0x8825) subGps = R.valueOf(e);
+      else push(e.tag, R.valueOf(e));
+    }
+    if (subExif) for (const e of R.readIFD(subExif)) push(e.tag, R.valueOf(e));
+
+    let gps = null;
+    if (subGps) {
+      let latRef = '', lngRef = '', lat = null, lng = null;
+      for (const e of R.readIFD(subGps)) {
+        const v = R.valueOf(e);
+        if (e.tag === 0x0001) latRef = String(v || '');
+        if (e.tag === 0x0003) lngRef = String(v || '');
+        if (e.tag === 0x0002) lat = v;
+        if (e.tag === 0x0004) lng = v;
+        push(e.tag, e.tag === 0x0002 || e.tag === 0x0004 ? null : v);
+      }
+      const toDeg = (arr, ref) => {
+        if (!Array.isArray(arr) || arr.length < 3) return null;
+        let d = arr[0] + arr[1] / 60 + arr[2] / 3600;
+        if (ref === 'S' || ref === 'W') d = -d;
+        return Math.round(d * 1000000) / 1000000;
+      };
+      const la = toDeg(lat, latRef), lo = toDeg(lng, lngRef);
+      if (la !== null && lo !== null) gps = { lat: la, lng: lo };
+    }
+    return { items, gps, raw: items.length === 0 };
+  } catch (e) {
+    return { items: [], gps: null, raw: true };
+  }
+}
+
+// 摘掉 JPEG 里的元信息段(Exif / XMP / Photoshop IRB),图像数据原样保留
+function stripJpegMeta(bytes) {
+  const parts = [bytes.slice(0, 2)];
+  let p = 2;
+  let removed = 0;
+  while (p + 4 <= bytes.length) {
+    if (bytes[p] !== 0xFF) break;
+    const m = bytes[p + 1];
+    if (m === 0xD8 || (m >= 0xD0 && m <= 0xD7) || m === 0x01 || m === 0xFF) { p += 2; continue; }
+    if (m === 0xDA) { parts.push(bytes.slice(p)); break; }  // SOS 之后是压缩数据,整段拷走
+    if (m === 0xD9) { parts.push(bytes.slice(p, p + 2)); break; }
+    const len = (bytes[p + 2] << 8) | bytes[p + 3];
+    if (len < 2) { parts.push(bytes.slice(p)); break; }
+    const end = Math.min(p + 2 + len, bytes.length);
+    let drop = false;
+    if (m === 0xE1) { // APP1: Exif 或 XMP
+      const startsWith = (s) => {
+        for (let i = 0; i < s.length; i++) if (bytes[p + 4 + i] !== s.charCodeAt(i)) return false;
+        return true;
+      };
+      if (startsWith('Exif')) drop = true;
+      else if (startsWith('http://ns.adobe.com/xap/1.0/')) drop = true;
+    } else if (m === 0xED || m === 0xEC) {
+      drop = true; // APP13(Photoshop IRB)/ APP12(Ducky)也常带信息
+    }
+    if (drop) removed++;
+    else parts.push(bytes.slice(p, end));
+    p = end;
+  }
+  return { bytes: concatBytes(parts), removed };
+}
+
+// 摘掉 PNG 里的 tEXt / iTXt / zTXt / eXIf / tIME 块
+function stripPngMeta(bytes) {
+  const DROP = ['tEXt', 'iTXt', 'zTXt', 'eXIf', 'tIME'];
+  const parts = [bytes.slice(0, 8)];
+  let p = 8, removed = 0;
+  while (p + 8 <= bytes.length) {
+    const len = ((bytes[p] << 24) | (bytes[p + 1] << 16) | (bytes[p + 2] << 8) | bytes[p + 3]) >>> 0;
+    const type = String.fromCharCode(bytes[p + 4], bytes[p + 5], bytes[p + 6], bytes[p + 7]);
+    const end = p + 12 + len;
+    if (end > bytes.length) break;
+    if (DROP.includes(type)) removed++;
+    else parts.push(bytes.slice(p, end));
+    p = end;
+    if (type === 'IEND') break;
+  }
+  return { bytes: concatBytes(parts), removed };
+}
+
+// 读一张图片的所有元信息
+async function inspectImage(file) {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const isJpeg = buf[0] === 0xFF && buf[1] === 0xD8;
+  const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47;
+  if (isJpeg) return { kind: 'jpeg', ...(parseJpegExif(buf) || { items: [], gps: null, raw: false }) };
+  if (isPng) return { kind: 'png', items: [], gps: null, raw: false };
+  return { kind: 'other', items: [], gps: null, raw: false };
+}
+
+// 清除元信息,返回新的 Blob
+async function cleanImageMeta(file) {
+  const buf = new Uint8Array(await file.arrayBuffer());
+  const isJpeg = buf[0] === 0xFF && buf[1] === 0xD8;
+  const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47;
+  if (isJpeg) { const r = stripJpegMeta(buf); return { blob: new Blob([r.bytes], { type: 'image/jpeg' }), removed: r.removed, supported: true }; }
+  if (isPng) { const r = stripPngMeta(buf); return { blob: new Blob([r.bytes], { type: 'image/png' }), removed: r.removed, supported: true }; }
+  return { blob: null, removed: 0, supported: false };
+}
+
+// ============================================================
 // 图片处理核心
 // ============================================================
 const MAX_DIM = 4096;
@@ -1426,6 +1694,88 @@ async function tobase64Files() {
   b64Text.value = list.join('\n');
   b64Len.textContent = list.reduce((a, s) => a + s.length, 0).toLocaleString() + ' 字符';
   b64Result.hidden = false;
+}
+
+// ---- EXIF 隐私信息面板 ----
+async function refreshExifPanel() {
+  if (state.view !== 'exif' || !exifEmpty) return;
+  const f = state.files[0];
+  if (!f || !isImageFile(f)) {
+    exifEmpty.hidden = false;
+    exifEmpty.textContent = '先在上方选择一张照片,这里会列出它携带的隐私信息。';
+    exifInfo.hidden = true;
+    exifActions.hidden = true;
+    return;
+  }
+  exifEmpty.hidden = true;
+  exifInfo.hidden = false;
+  exifActions.hidden = false;
+  exifList.innerHTML = '<div class="muted">正在读取…</div>';
+  exifGps.hidden = true;
+
+  let r;
+  try { r = await inspectImage(f); }
+  catch (e) { exifList.innerHTML = '<div class="muted">读取失败</div>'; return; }
+  if (state.files[0] !== f) return; // 期间换了文件,丢弃这次结果
+
+  if (r.gps) {
+    exifGps.hidden = false;
+    exifGps.innerHTML = '⚠️ <b>这张照片带有定位信息</b>,精度通常在 10 米以内 —— '
+      + '发到网上等于把拍摄地点一起发出去。'
+      + '<div class="exif-coord">' + r.gps.lat.toFixed(6) + ', ' + r.gps.lng.toFixed(6) + '</div>'
+      + '<div class="exif-coord-sub">可以直接把上面这串坐标粘到地图里试试</div>';
+  }
+  if (!r.items.length) {
+    exifList.innerHTML = '<div class="exif-clean">✅ 没有读到设备或位置信息'
+      + (r.kind === 'png' ? '(PNG 格式通常不带 EXIF)' : r.raw ? '(有元信息段,但内容无法解析)' : '')
+      + '</div>';
+  } else {
+    exifList.innerHTML = r.items.map((it) =>
+      '<div class="exif-row"><span class="exif-k">' + esc(it.k) + '</span>'
+      + '<span class="exif-v">' + esc(it.v) + '</span></div>').join('');
+  }
+}
+
+async function cleanExifFiles() {
+  if (!state.files.length) { alert('请先选择图片'); return; }
+  clearResults();
+  results.hidden = false;
+  countEl.textContent = '共 ' + state.files.length + ' 张';
+  const failed = [];
+  let removedTotal = 0, done = 0;
+
+  for (const f of state.files) {
+    try {
+      const r = await cleanImageMeta(f);
+      if (!r.supported) {
+        failed.push({ name: f.name, msg: '只支持 JPG / PNG;其他格式本身通常不含 EXIF' });
+        continue;
+      }
+      removedTotal += r.removed;
+      done++;
+      const url = URL.createObjectURL(r.blob);
+      const item = {
+        blob: r.blob, url, mime: r.blob.type, file: f,
+        nameOverride: f.name.replace(/\.[^.]+$/, '') + '_已清除信息.' + extFromMime(r.blob.type),
+        origSize: f.size, outSize: r.blob.size,
+        savedBytes: f.size - r.blob.size,
+        savedPct: f.size ? Math.round((f.size - r.blob.size) / f.size * 100) : 0,
+      };
+      renderResult(item);
+      processedItems.push({ name: resultName(item), blob: r.blob });
+    } catch (e) {
+      failed.push({ name: f.name, msg: (e && e.message) || '处理失败' });
+    }
+  }
+  if (failed.length) renderFailures(failed);
+  if (done && removedTotal === 0) {
+    const ok = document.createElement('div');
+    ok.className = 'exif-cleanbox';
+    ok.textContent = '✅ 这些图片本来就很干净,没有找到可清除的元信息,但仍已重新输出。';
+    results.insertBefore(ok, resultList);
+  }
+  updateZipBtn();
+  refreshExifPanel();
 }
 
 // ---- PDF 合并 ----
@@ -1850,7 +2200,11 @@ function extFromMime(mime) {
 
 function outNameFor(item) {
   const base = item.file.name.replace(/\.[^.]+$/, '');
-  return base + '_处理.' + extFromMime(item.mime);
+  return base + (item.suffix || '_处理') + '.' + extFromMime(item.mime);
+}
+// 结果项最终用的文件名(允许单项覆盖)
+function resultName(item) {
+  return item.nameOverride || outNameFor(item);
 }
 
 function fmtSize(bytes) {
@@ -1862,7 +2216,7 @@ function fmtSize(bytes) {
 function renderResult(item) {
   const div = document.createElement('div');
   div.className = 'result-item';
-  const outName = outNameFor(item);
+  const outName = resultName(item);
   div.innerHTML = `
     <img src="${item.url}" alt="" />
     <div class="result-info">
@@ -1916,7 +2270,7 @@ async function processFiles(fn) {
       const blob = await fn(state.files[i], i);
       const item = await makeResult(state.files[i], blob.type || 'image/jpeg', blob);
       renderResult(item);
-      processedItems.push({ name: outNameFor(item), blob });
+      processedItems.push({ name: resultName(item), blob });
     } catch (err) {
       // 只写 console 的话用户什么都看不到 —— 点了按钮像没反应一样。
       // 必须把失败原因显示在页面上。
@@ -2282,6 +2636,7 @@ function switchTool(view) {
   }
 
   if (view === 'sticker') ensureStickerGrid();
+  if (view === 'exif') refreshExifPanel();
   renderFileBar();
   updateLockBanners();
   refreshPdfPanels();
@@ -2526,6 +2881,7 @@ function renderFileBar() {
   const n = state.files.length;
   // 底图变了,预览要跟着换(异步,不阻塞渲染)
   setTimeout(() => { pvBaseFile = null; renderPreview('watermark'); renderPreview('sticker'); }, 0);
+  refreshExifPanel();
   const pdfMode = isPdfTool(state.view);
   const canReorder = state.view === 'pdfmerge' && n > 1;
   fileBar.hidden = n === 0;
@@ -2698,6 +3054,7 @@ async function runProcess(process) {
     case 'collage': await collageFiles(); break;
     case 'topdf': await topdfFiles(); break;
     case 'tobase64': await tobase64Files(); break;
+    case 'exifclean': await cleanExifFiles(); break;
     case 'pdfmerge': await mergePdfs(); break;
     case 'pdfsplit': await splitPdf(); break;
     case 'pdfwatermark': await pdfWatermark(); break;
