@@ -72,7 +72,9 @@ border-top:1px solid #e2e8f2}
 `;
 
 function page(t, all) {
-  const url = `${SITE}/t/${t.slug}.html`;
+  // 用无扩展名地址:Cloudflare Pages 会把 /t/x.html 308 跳到 /t/x,
+  // canonical 和 sitemap 必须写最终地址,否则会被当成两个页面
+  const url = `${SITE}/t/${t.slug}`;
   const others = all.filter((x) => x.slug !== t.slug).slice(0, 12);
   const faqLd = {
     '@context': 'https://schema.org', '@type': 'FAQPage',
@@ -136,7 +138,7 @@ ${t.faq.map(([q, a]) => `    <dt>${esc(q)}</dt>\n    <dd>${esc(a)}</dd>`).join('
 
   <div class="others">
     <h2>其他工具</h2>
-${others.map((o) => `    <a href="/t/${o.slug}.html">${esc(o.nav)}</a>`).join('\n')}
+${others.map((o) => `    <a href="/t/${o.slug}">${esc(o.nav)}</a>`).join('\n')}
     <a href="/">全部 ${all.length} 个工具</a>
   </div>
 </main>
@@ -157,7 +159,7 @@ for (const t of TOOLS) {
 const today = new Date().toISOString().slice(0, 10);
 const urls = [
   { loc: `${SITE}/`, priority: '1.0' },
-  ...TOOLS.map((t) => ({ loc: `${SITE}/t/${t.slug}.html`, priority: '0.8' })),
+  ...TOOLS.map((t) => ({ loc: `${SITE}/t/${t.slug}`, priority: '0.8' })),
 ];
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
