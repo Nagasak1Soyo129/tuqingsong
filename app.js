@@ -382,9 +382,18 @@ function track(kind, tool) {
   try {
     let uv = false;
     if (kind === 'pv') {
-      // 一次会话只算一个新访客,避免每次刷新都多记一个
-      uv = !sessionStorage.getItem('tqs_sess');
-      if (uv) sessionStorage.setItem('tqs_sess', '1');
+      // 按「每浏览器每天一次」记独立访客。
+      // 原来用 sessionStorage,而它是按标签页隔离的 —— 每开一个新标签
+      // 就会被记成一个新访客,数字虚高得离谱(自己测试时尤其明显)。
+      // 换成 localStorage 存日期戳,得到的是「日活访客」,才是能用来判断
+      // 渠道效果的指标。
+      try {
+        const today = new Date().toISOString().slice(0, 10);
+        if (localStorage.getItem('tqs_uv') !== today) {
+          uv = true;
+          localStorage.setItem('tqs_uv', today);
+        }
+      } catch (e) { uv = false; }
     }
     const payload = JSON.stringify({
       kind,
