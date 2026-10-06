@@ -537,14 +537,37 @@ function isImageFile(f) {
 }
 
 let pdfLibPromise = null;
+
+// PDF 引擎约 185KB(Brotli 后),跨境下载实测要 10 秒以上。
+// 加载期间必须给明确反馈 —— 否则用户点了按钮会以为没反应。
+function setPdfLoading(on) {
+  let el = document.getElementById('pdfLoading');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'pdfLoading';
+    el.className = 'pdf-loading';
+    el.innerHTML = '正在加载 PDF 引擎…<span>首次使用需下载约 185KB,可能要十几秒</span>';
+    document.body.appendChild(el);
+  }
+  el.hidden = !on;
+}
+
 function loadPdfLib() {
   if (window.PDFLib) return Promise.resolve(window.PDFLib);
   if (!pdfLibPromise) {
     pdfLibPromise = new Promise((resolve, reject) => {
+      setPdfLoading(true);
       const s = document.createElement('script');
       s.src = 'vendor/pdf-lib.min.js';
-      s.onload = () => (window.PDFLib ? resolve(window.PDFLib) : reject(new Error('PDF 库加载失败')));
-      s.onerror = () => { pdfLibPromise = null; reject(new Error('PDF 库加载失败,请检查网络')); };
+      s.onload = () => {
+        setPdfLoading(false);
+        window.PDFLib ? resolve(window.PDFLib) : reject(new Error('PDF 库加载失败'));
+      };
+      s.onerror = () => {
+        setPdfLoading(false);
+        pdfLibPromise = null;
+        reject(new Error('PDF 库加载失败,请检查网络'));
+      };
       document.head.appendChild(s);
     });
   }
@@ -2637,6 +2660,9 @@ function switchTool(view) {
 
   if (view === 'sticker') ensureStickerGrid();
   if (view === 'exif') refreshExifPanel();
+  // 提前把 PDF 引擎拉起来:等用户选完文件、点按钮时通常已经就绪,
+  // 把跨境那十几秒藏在他操作的时间里
+  if (isPdfTool(view)) loadPdfLib().catch(() => {});
   renderFileBar();
   updateLockBanners();
   refreshPdfPanels();
